@@ -1,0 +1,42 @@
+version: "3.9"
+
+services:
+
+
+  # ── PostgreSQL 15 ──────────────────────────────────────────────
+  db:
+    image: postgres:15-alpine
+    container_name: restautech_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: restautech_user
+      POSTGRES_PASSWORD: restautech_pass_2026
+      POSTGRES_DB: restautech_db
+    ports:
+      - "5432:5432"        # Puerto local:puerto contenedor
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U restautech_user -d restautech_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ── Redis 7 ────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: restautech_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:    # Los datos de PostgreSQL persisten aunque reinicies Docker
+  redis_data:

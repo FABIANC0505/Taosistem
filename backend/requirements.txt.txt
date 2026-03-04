@@ -1,0 +1,27 @@
+# Framework principal
+fastapi==0.110.0
+uvicorn[standard]==0.29.0
+
+# Base de datos
+sqlalchemy==2.0.29
+asyncpg==0.29.0
+alembic==1.13.1
+psycopg2-binary==2.9.9 --only-binary=:all:     # Para Alembic (migraciones síncronas)
+
+# Redis
+redis[asyncio]==5.0.3
+
+# Autenticación
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+
+# Validación
+pydantic==2.6.4
+pydantic-settings==2.2.1
+
+# Imágenes
+Pillow==10.2.0
+
+# Utilidades
+python-multipart==0.0.9
+qrcode[pil]==7.4.2
