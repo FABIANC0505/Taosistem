@@ -168,6 +168,44 @@ export const DashboardPage: React.FC = () => {
           </div>
         </div>
 
+        {/* Historial de Pedidos Despachados */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Pedidos Despachados por Día</h3>
+            <ResponsiveContainer width="100%" height={280}>
+              <LineChart data={metrics.dispatched_por_dia}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="fecha" />
+                <YAxis allowDecimals={false} />
+                <Tooltip formatter={(value) => `${value} pedidos`} />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey="cantidad"
+                  stroke="#10b981"
+                  strokeWidth={2}
+                  dot={{ fill: '#10b981' }}
+                  name="Despachados"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Pedidos Despachados por Mes</h3>
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={metrics.dispatched_por_mes}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="mes" />
+                <YAxis allowDecimals={false} />
+                <Tooltip formatter={(value) => `${value} pedidos`} />
+                <Legend />
+                <Bar dataKey="cantidad" fill="#6366f1" name="Despachados" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
         {/* Producto Más Vendido */}
         <div className="bg-gradient-to-r from-primary-600 to-secondary-600 rounded-lg shadow p-6 text-white">
           <h3 className="text-lg font-semibold mb-4">Producto Más Vendido</h3>

@@ -136,6 +136,14 @@ GET /metrics/dashboard      # KPIs + Gráficos
 GET /metrics/income-trends  # Ingresos por día
 GET /metrics/top-products   # Top 5 productos
 GET /metrics/statistics     # Estadísticas completas
+GET /metrics/dispatched-history  # Historial despachados día/mes (admin/cocina)
+```
+
+### Settings (✅ Implementado)
+
+```
+GET /settings/history-retention  # Obtener retención de historial (solo admin)
+PUT /settings/history-retention  # Actualizar retención de historial (solo admin)
 ```
 
 ---
@@ -258,6 +266,37 @@ Una vez logueado, el dashboard debe mostrar:
 - **Media**: Promedio de ingresos diarios
 - **Moda**: Valor más frecuente de ingresos
 - **Top Productos**: Barras con cantidad e ingresos
+- **Despachados por Día**: Conteo diario de pedidos entregados
+- **Despachados por Mes**: Conteo mensual de pedidos entregados
+
+---
+
+## 🗂️ Probar Historial de Pedidos y Retención
+
+### 1) Validar visualización de historial
+
+1. Inicia sesión como `admin` y entra a `/admin`.
+2. Verifica que aparezcan los bloques:
+  - Pedidos despachados por día
+  - Pedidos despachados por mes
+3. Inicia sesión como `cocina` y entra a `/cocina/pedidos`.
+4. Verifica que se muestren listados de despachados por día/mes.
+
+### 2) Validar permisos por rol
+
+- `admin` → `GET /metrics/dispatched-history` ✅
+- `cocina` → `GET /metrics/dispatched-history` ✅
+- `mesero` → `GET /metrics/dispatched-history` ❌ (403)
+- `admin` → `GET/PUT /settings/history-retention` ✅
+- `mesero/cocina` → `GET/PUT /settings/history-retention` ❌ (403)
+
+### 3) Validar retención configurable
+
+1. Entra como `admin` a `/admin/configuracion`.
+2. Cambia “Retención de historial (días)” y guarda.
+3. Consulta `GET /settings/history-retention` y confirma el nuevo valor.
+4. Verifica que el historial despachado respete la retención configurada.
+5. Confirma que los pedidos `ENTREGADO` fuera del umbral se limpian automáticamente.
 
 ---
 
@@ -292,6 +331,7 @@ Una vez logueado, el dashboard debe mostrar:
 ✓ Actualizar datos restaurante
 ✓ Horarios
 ✓ Impuestos
+✓ Ajustar retención de historial (días)
 ✓ Guardar cambios
 ```
 
@@ -345,10 +385,14 @@ Allí puedes:
 - [ ] Dashboard carga datos
 - [ ] Gráficos se renderizan
 - [ ] Media y Moda se calculan
+- [ ] Historial despachados (día/mes) visible en admin
+- [ ] Historial despachados (día/mes) visible en cocina
 - [ ] CRUD de usuarios funciona
 - [ ] CRUD de productos funciona
 - [ ] Descuentos se pueden crear
 - [ ] Configuración se guarda
+- [ ] Retención de historial configurable desde admin
+- [ ] Limpieza automática de historial aplicada según retención
 
 ---
 

@@ -1,5 +1,5 @@
 import api from '../utils/api';
-import { Metrics } from '../types';
+import { DispatchedHistory, Metrics } from '../types';
 
 export const metricsService = {
   getDashboard: async (): Promise<Metrics> => {
@@ -19,6 +19,11 @@ export const metricsService = {
 
   getStatistics: async () => {
     const response = await api.get('/metrics/statistics');
+    return response.data;
+  },
+
+  getDispatchedHistory: async (): Promise<DispatchedHistory> => {
+    const response = await api.get('/metrics/dispatched-history');
     return response.data;
   },
 };

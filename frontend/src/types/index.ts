@@ -87,4 +87,16 @@ export interface Metrics {
   moda_ingresos: number;
   ingresos_por_dia: Array<{ fecha: string; ingresos: number }>;
   productos_top: Array<{ nombre: string; cantidad: number; ingresos: number }>;
+  dispatched_por_dia: Array<{ fecha: string; cantidad: number }>;
+  dispatched_por_mes: Array<{ mes: string; cantidad: number }>;
+}
+
+export interface DispatchedHistory {
+  retention_days: number;
+  dispatched_por_dia: Array<{ fecha: string; cantidad: number }>;
+  dispatched_por_mes: Array<{ mes: string; cantidad: number }>;
+}
+
+export interface HistoryRetentionSettings {
+  retention_days: number;
 }

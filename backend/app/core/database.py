@@ -16,7 +16,7 @@ async def get_db():
             await session.close()
 
 async def init_db():
-    from app.models import User, Product, Order, AuditLog
+    from app.models import User, Product, Order, AuditLog, AppSetting
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         print("Conexion a PostgreSQL exitosa y tablas creadas")

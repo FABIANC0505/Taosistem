@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Save, Settings } from 'lucide-react';
 import { AdminLayout } from '../components/AdminLayout';
+import { settingsService } from '../services/settingsService';
 
 export const ConfiguracionPage: React.FC = () => {
   const [settings, setSettings] = useState({
@@ -15,15 +16,38 @@ export const ConfiguracionPage: React.FC = () => {
   });
 
   const [success, setSuccess] = useState('');
+  const [error, setError] = useState('');
+  const [retentionDays, setRetentionDays] = useState(90);
+
+  useEffect(() => {
+    loadHistoryRetention();
+  }, []);
+
+  const loadHistoryRetention = async () => {
+    try {
+      const data = await settingsService.getHistoryRetention();
+      setRetentionDays(data.retention_days);
+    } catch (err) {
+      console.error(err);
+      setError('No se pudo cargar la configuración de historial');
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setSettings({ ...settings, [name]: value });
   };
 
-  const handleSave = () => {
-    setSuccess('Configuración guardada correctamente');
-    setTimeout(() => setSuccess(''), 3000);
+  const handleSave = async () => {
+    try {
+      setError('');
+      await settingsService.updateHistoryRetention(retentionDays);
+      setSuccess('Configuración guardada correctamente');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      console.error(err);
+      setError('No se pudo guardar la configuración');
+    }
   };
 
   return (
@@ -38,6 +62,12 @@ export const ConfiguracionPage: React.FC = () => {
         {success && (
           <div className="p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg">
             {success}
+          </div>
+        )}
+
+        {error && (
+          <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+            {error}
           </div>
         )}
 
@@ -168,6 +198,28 @@ export const ConfiguracionPage: React.FC = () => {
                     <option value="GBP">GBP (£)</option>
                     <option value="MXN">MXN ($)</option>
                   </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-6 border-t border-gray-200">
+              <h4 className="text-md font-semibold mb-4">Historial de Pedidos</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Retención de historial (días)
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={3650}
+                    value={retentionDays}
+                    onChange={(e) => setRetentionDays(Number(e.target.value || 1))}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+                  />
+                  <p className="text-xs text-gray-500 mt-2">
+                    Los pedidos despachados más antiguos que este límite se eliminarán automáticamente.
+                  </p>
                 </div>
               </div>
             </div>

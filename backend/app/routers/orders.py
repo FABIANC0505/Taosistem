@@ -6,6 +6,10 @@ from app.core.database import get_db
 from app.core.security import verify_token
 from app.models.orden import Order, OrderStatus
 from app.models.user import User, UserRole
+from app.services.history_settings import (
+    cleanup_expired_dispatched_orders,
+    get_history_retention_days,
+)
 from app.schemas.orden import (
     ActualizarEstadoSchema,
     ActualizarPedidoSchema,
@@ -113,6 +117,9 @@ async def get_orders(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    retention_days = await get_history_retention_days(db)
+    await cleanup_expired_dispatched_orders(db, retention_days)
+
     stmt = select(Order).order_by(Order.created_at.desc())
 
     if current_user.rol == UserRole.MESERO:

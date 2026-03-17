@@ -68,6 +68,7 @@ npm run dev
 - Gráfico de tendencia de ingresos (últimos 30 días)
 - Top 10 productos más vendidos calculado de items reales por pedido
 - Cálculo automático de media y moda de ingresos
+- Historial de pedidos despachados día a día y mes a mes
 
 ✅ **Panel Admin — Gestión de Usuarios**
 - CRUD completo con roles: `admin`, `mesero`, `cocina`
@@ -88,6 +89,7 @@ npm run dev
 - Recarga automática cada 10 segundos
 - Marcar pedidos como entregado con un clic
 - Permisos restringidos: no puede editar, cancelar ni eliminar pedidos
+- Visualización de historial de pedidos despachados (día/mes)
 
 ✅ **Control de Acceso por Rol (RBAC)**
 - JWT tokens con expiración configurable
@@ -98,6 +100,7 @@ npm run dev
 ✅ **Descuentos & Configuración**
 - Códigos de descuento con porcentajes personalizables
 - Nombre, horarios, impuestos y moneda del restaurante
+- Retención configurable del historial de pedidos despachados (limpieza automática)
 
 ---
 
@@ -169,6 +172,8 @@ taosistem_backend/
 | Marcar como entregado | ✅ | ✅ | ✅ |
 | Gestionar usuarios/productos | ✅ | ❌ | ❌ |
 | Ver métricas | ✅ | ❌ | ❌ |
+| Ver historial despachados (día/mes) | ✅ | ❌ | ✅ |
+| Configurar retención historial | ✅ | ❌ | ❌ |
 
 ---
 
@@ -252,6 +257,14 @@ Ver archivo `backend/.env` para configuración completa.
 ---
 
 ## 📋 Changelog
+
+### v1.3.0 — Historial de Pedidos + Retención Configurable
+- **Nuevo:** Historial de pedidos despachados por día y por mes en dashboard admin
+- **Nuevo:** Historial de pedidos despachados por día y por mes en panel cocina
+- **Nuevo:** Endpoint `GET /metrics/dispatched-history` (acceso `admin` y `cocina`)
+- **Nuevo:** Endpoints de configuración `GET/PUT /settings/history-retention` (solo `admin`)
+- **Nuevo:** Limpieza automática de pedidos despachados antiguos según política de retención
+- **Mejora:** Configuración de retención expuesta en la vista `/admin/configuracion`
 
 ### v1.2.0 — Panel Cocina + Correcciones Admin
 - **Nuevo:** Panel de cocina (`/cocina/pedidos`) con recarga automática cada 10 segundos

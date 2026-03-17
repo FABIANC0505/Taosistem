@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, Header, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.core.database import get_db
@@ -9,12 +9,15 @@ from typing import List, Optional
 
 router = APIRouter(prefix="/users", tags=["users"])
 
-async def get_current_user(token: str, db: AsyncSession = Depends(get_db)):
+async def get_current_user(
+    authorization: str = Header(default=None),
+    db: AsyncSession = Depends(get_db),
+):
     """Obtener usuario actual desde el token JWT"""
-    if not token.startswith("Bearer "):
+    if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Token inválido")
     
-    token = token.replace("Bearer ", "")
+    token = authorization.replace("Bearer ", "")
     payload = verify_token(token)
     
     if not payload:
@@ -27,8 +30,17 @@ async def get_current_user(token: str, db: AsyncSession = Depends(get_db)):
     
     if not user:
         raise HTTPException(status_code=401, detail="Usuario no encontrado")
+
+    if not user.activo:
+        raise HTTPException(status_code=403, detail="Usuario inactivo")
     
     return user
+
+
+async def require_admin(current_user: User = Depends(get_current_user)):
+    if current_user.rol != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="No autorizado")
+    return current_user
 
 # Schemas
 class UserBase(BaseModel):
@@ -58,7 +70,10 @@ class UserResponse(UserBase):
         from_attributes = True
 
 @router.get("", response_model=List[UserResponse])
-async def get_users(db: AsyncSession = Depends(get_db)):
+async def get_users(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
     """Obtener todos los usuarios"""
     stmt = select(User).order_by(User.created_at.desc())
     result = await db.execute(stmt)
@@ -78,7 +93,11 @@ async def get_users(db: AsyncSession = Depends(get_db)):
     ]
 
 @router.get("/{user_id}", response_model=UserResponse)
-async def get_user(user_id: str, db: AsyncSession = Depends(get_db)):
+async def get_user(
+    user_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
     """Obtener usuario por ID"""
     stmt = select(User).where(User.id == user_id)
     result = await db.execute(stmt)
@@ -98,7 +117,11 @@ async def get_user(user_id: str, db: AsyncSession = Depends(get_db)):
     )
 
 @router.post("", response_model=UserResponse)
-async def create_user(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
+async def create_user(
+    user_data: UserCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
     """Crear nuevo usuario"""
     
     # Verificar si email existe
@@ -130,7 +153,12 @@ async def create_user(user_data: UserCreate, db: AsyncSession = Depends(get_db))
     )
 
 @router.put("/{user_id}", response_model=UserResponse)
-async def update_user(user_id: str, user_data: UserUpdate, db: AsyncSession = Depends(get_db)):
+async def update_user(
+    user_id: str,
+    user_data: UserUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
     """Actualizar usuario"""
     
     stmt = select(User).where(User.id == user_id)
@@ -163,7 +191,11 @@ async def update_user(user_id: str, user_data: UserUpdate, db: AsyncSession = De
     )
 
 @router.delete("/{user_id}")
-async def delete_user(user_id: str, db: AsyncSession = Depends(get_db)):
+async def delete_user(
+    user_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
     """Eliminar usuario"""
     
     stmt = select(User).where(User.id == user_id)
@@ -179,7 +211,12 @@ async def delete_user(user_id: str, db: AsyncSession = Depends(get_db)):
     return {"detail": "Usuario eliminado"}
 
 @router.put("/{user_id}/role")
-async def update_user_role(user_id: str, rol: UserRole, db: AsyncSession = Depends(get_db)):
+async def update_user_role(
+    user_id: str,
+    rol: UserRole,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
     """Actualizar rol de usuario"""
     
     stmt = select(User).where(User.id == user_id)
@@ -204,7 +241,11 @@ async def update_user_role(user_id: str, rol: UserRole, db: AsyncSession = Depen
     )
 
 @router.put("/{user_id}/deactivate")
-async def deactivate_user(user_id: str, db: AsyncSession = Depends(get_db)):
+async def deactivate_user(
+    user_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
     """Desactivar usuario"""
     
     stmt = select(User).where(User.id == user_id)

@@ -2,7 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { RefreshCw, Clock3, CheckCircle2 } from 'lucide-react';
 import { CocinaLayout } from '../../components/CocinaLayout';
 import { ordersService } from '../../services/orders';
-import { Order, OrderStatus } from '../../types';
+import { metricsService } from '../../services/metricsService';
+import { DispatchedHistory, Order, OrderStatus } from '../../types';
 
 const statusLabel: Record<OrderStatus, string> = {
   [OrderStatus.PENDIENTE]: 'Pendiente',
@@ -25,6 +26,7 @@ export const PedidosCocinaPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [history, setHistory] = useState<DispatchedHistory | null>(null);
 
   const activeOrders = useMemo(
     () => orders.filter((order) => order.status !== OrderStatus.CANCELADO && order.status !== OrderStatus.ENTREGADO),
@@ -35,8 +37,12 @@ export const PedidosCocinaPage: React.FC = () => {
     try {
       setLoading(true);
       setError('');
-      const data = await ordersService.getAll();
-      setOrders(data);
+      const [ordersData, historyData] = await Promise.all([
+        ordersService.getAll(),
+        metricsService.getDispatchedHistory(),
+      ]);
+      setOrders(ordersData);
+      setHistory(historyData);
     } catch (err) {
       console.error(err);
       setError('No se pudieron cargar los pedidos de cocina');
@@ -83,6 +89,43 @@ export const PedidosCocinaPage: React.FC = () => {
         </div>
 
         {error && <div className="p-3 rounded-lg bg-red-50 text-red-700 border border-red-200">{error}</div>}
+
+        {history && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+              <h2 className="text-sm font-semibold text-gray-900 mb-3">Despachados día a día</h2>
+              <div className="space-y-2 max-h-56 overflow-auto pr-1">
+                {history.dispatched_por_dia.length === 0 ? (
+                  <p className="text-sm text-gray-500">Sin registros disponibles</p>
+                ) : (
+                  history.dispatched_por_dia.slice(-14).reverse().map((item) => (
+                    <div key={item.fecha} className="flex items-center justify-between text-sm border-b border-gray-100 pb-1">
+                      <span className="text-gray-700">{item.fecha}</span>
+                      <span className="font-semibold text-gray-900">{item.cantidad}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+              <h2 className="text-sm font-semibold text-gray-900 mb-3">Despachados mes a mes</h2>
+              <div className="space-y-2 max-h-56 overflow-auto pr-1">
+                {history.dispatched_por_mes.length === 0 ? (
+                  <p className="text-sm text-gray-500">Sin registros disponibles</p>
+                ) : (
+                  history.dispatched_por_mes.slice(-12).reverse().map((item) => (
+                    <div key={item.mes} className="flex items-center justify-between text-sm border-b border-gray-100 pb-1">
+                      <span className="text-gray-700">{item.mes}</span>
+                      <span className="font-semibold text-gray-900">{item.cantidad}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+              <p className="text-xs text-gray-500 mt-3">Retención configurada: {history.retention_days} días</p>
+            </div>
+          </div>
+        )}
 
         {loading ? (
           <div className="h-40 flex items-center justify-center">
