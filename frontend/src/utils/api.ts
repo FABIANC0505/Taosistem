@@ -1,6 +1,12 @@
 import axios, { AxiosInstance } from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const envApiUrl = String(import.meta.env.VITE_API_URL || '').trim();
+const hasInvalidPlaceholder =
+  !envApiUrl ||
+  envApiUrl.includes('tu-backend-production') ||
+  envApiUrl.includes('backend:8000');
+
+const API_BASE_URL = hasInvalidPlaceholder ? 'http://localhost:8000' : envApiUrl;
 
 export const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,

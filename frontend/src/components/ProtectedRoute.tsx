@@ -9,6 +9,8 @@ interface ProtectedRouteProps {
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole }) => {
   const { user, loading } = useAuth();
+  const currentRole = String(user?.rol || '').toLowerCase();
+  const normalizedRequiredRole = String(requiredRole || '').toLowerCase();
 
   if (loading) {
     return (
@@ -22,11 +24,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requir
     return <Navigate to="/login" replace />;
   }
 
-  if (requiredRole && user.rol !== requiredRole) {
-    if (user.rol === 'mesero') {
+  if (requiredRole && currentRole !== normalizedRequiredRole) {
+    if (currentRole === 'mesero') {
       return <Navigate to="/mesero/pedidos" replace />;
     }
-    if (user.rol === 'cocina') {
+    if (currentRole === 'cocina') {
       return <Navigate to="/cocina/pedidos" replace />;
     }
     return <Navigate to="/admin" replace />;

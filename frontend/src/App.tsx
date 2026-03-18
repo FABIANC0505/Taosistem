@@ -15,16 +15,17 @@ import './index.css';
 
 const HomeRedirect: React.FC = () => {
   const user = authService.getCurrentUser();
+  const role = String(user?.rol || '').toLowerCase();
 
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  if (user.rol === 'mesero') {
+  if (role === 'mesero') {
     return <Navigate to="/mesero/pedidos" replace />;
   }
 
-  if (user.rol === 'cocina') {
+  if (role === 'cocina') {
     return <Navigate to="/cocina/pedidos" replace />;
   }
 

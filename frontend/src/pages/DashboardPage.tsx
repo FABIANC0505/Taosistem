@@ -19,11 +19,14 @@ export const DashboardPage: React.FC = () => {
 
   useEffect(() => {
     loadMetrics();
+    const interval = setInterval(loadMetrics, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   const loadMetrics = async () => {
     try {
       setLoading(true);
+      setError('');
       const data = await metricsService.getDashboard();
       setMetrics(data);
     } catch (err) {
@@ -34,7 +37,7 @@ export const DashboardPage: React.FC = () => {
     }
   };
 
-  if (loading) {
+  if (loading && !metrics) {
     return (
       <AdminLayout>
         <div className="flex items-center justify-center h-96">
@@ -44,7 +47,7 @@ export const DashboardPage: React.FC = () => {
     );
   }
 
-  if (error) {
+  if (error && !metrics) {
     return (
       <AdminLayout>
         <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
@@ -86,6 +89,12 @@ export const DashboardPage: React.FC = () => {
   return (
     <AdminLayout>
       <div className="space-y-6">
+        {error && (
+          <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+            {error}
+          </div>
+        )}
+
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>

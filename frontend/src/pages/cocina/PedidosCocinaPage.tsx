@@ -37,15 +37,24 @@ export const PedidosCocinaPage: React.FC = () => {
     try {
       setLoading(true);
       setError('');
-      const [ordersData, historyData] = await Promise.all([
+
+      const [ordersResult, historyResult] = await Promise.allSettled([
         ordersService.getAll(),
         metricsService.getDispatchedHistory(),
       ]);
-      setOrders(ordersData);
-      setHistory(historyData);
-    } catch (err) {
-      console.error(err);
-      setError('No se pudieron cargar los pedidos de cocina');
+
+      if (ordersResult.status === 'fulfilled') {
+        setOrders(ordersResult.value);
+      } else {
+        console.error(ordersResult.reason);
+        setError('No se pudieron cargar los pedidos de cocina');
+      }
+
+      if (historyResult.status === 'fulfilled') {
+        setHistory(historyResult.value);
+      } else {
+        console.error(historyResult.reason);
+      }
     } finally {
       setLoading(false);
     }

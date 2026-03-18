@@ -16,18 +16,22 @@ export const LoginPage: React.FC = () => {
     setError('');
 
     try {
+      authService.logout();
+
       const response = await authService.login({
-        email,
+        email: email.trim(),
         password,
       });
 
       // Guardar token y usuario
       authService.saveAuth(response.access_token, response.user);
 
+      const role = String(response.user?.rol || '').toLowerCase();
+
       // Redirigir al dashboard
-      if (response.user.rol === 'mesero') {
+      if (role === 'mesero') {
         navigate('/mesero/pedidos');
-      } else if (response.user.rol === 'cocina') {
+      } else if (role === 'cocina') {
         navigate('/cocina/pedidos');
       } else {
         navigate('/admin');
