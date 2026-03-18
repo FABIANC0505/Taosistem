@@ -4,6 +4,27 @@
 
 El backend FastAPI puede desplegarse en varias plataformas:
 
+## ✅ Backend desacoplado del frontend
+
+El proyecto ahora incluye un stack dedicado para backend:
+
+```bash
+docker compose -f docker-compose.backend.yml up -d --build
+```
+
+Incluye únicamente:
+- API FastAPI
+- PostgreSQL
+- Redis
+
+También puedes usar el script de Windows:
+
+```powershell
+.\start-backend.ps1
+```
+
+Esto te permite desplegar y validar backend sin depender del contenedor del frontend.
+
 ### 1. **Railway** ⭐ (Recomendado)
 
 Railway es una excelente opción para FastAPI + PostgreSQL.
@@ -99,6 +120,11 @@ SMTP_PORT=587
 SMTP_USER=tu-email@gmail.com
 SMTP_PASSWORD=tu-contraseña-app
 ```
+
+Notas importantes:
+- Si defines `DATABASE_URL`, el backend la usará automáticamente (compatible con Railway/Render).
+- Si NO defines `DATABASE_URL`, usará `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `POSTGRES_HOST`, `POSTGRES_PORT`.
+- `CORS_ORIGINS` acepta una lista separada por comas.
 
 ## 📋 Pre-Deployment Checklist
 

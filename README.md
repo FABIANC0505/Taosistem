@@ -20,7 +20,13 @@ Sistema completo para restaurantes con **tres paneles diferenciados por rol**: a
 ```
 ✅ Control total | ❌ Requiere PostgreSQL local
 
-### Opción C: Setup Manual
+### Opción C: Solo Backend en Docker (nuevo)
+```powershell
+.\start-backend.ps1
+```
+✅ Desacoplado del frontend | ✅ Ideal para despliegue API
+
+### Opción D: Setup Manual
 ```powershell
 # 1. Crear BD (primera vez)
 .\setup-db.ps1
@@ -48,6 +54,8 @@ npm run dev
 | **Backend API** | http://localhost:8000 | API REST |
 | **API Docs** | http://localhost:8000/docs | Swagger UI |
 | **pgAdmin** | http://localhost:5050 | (Solo Docker) |
+
+> Si usas `start-backend.ps1`, se levantan únicamente API + PostgreSQL + Redis.
 
 **Credenciales por rol:**
 
