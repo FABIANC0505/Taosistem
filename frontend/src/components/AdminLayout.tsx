@@ -8,7 +8,7 @@ export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children 
   const closeSidebar = () => setSidebarOpen(false);
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <div className="flex flex-col h-screen gradient-bg">
       {/* Navbar con height fijo */}
       <div className="h-16 flex-shrink-0">
         <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />

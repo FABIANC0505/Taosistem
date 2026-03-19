@@ -36,9 +36,18 @@ export const NuevoPedidoPage: React.FC = () => {
 
   const imageSrc = (url?: string) => {
     if (!url) return '';
+    if (url.startsWith('/img/')) return url;   // served from frontend /public/img
     if (url.startsWith('http://') || url.startsWith('https://')) return url;
     const base = import.meta.env.VITE_API_URL || 'http://localhost:8000';
     return `${base}${url}`;
+  };
+
+  const categoryEmoji = (cat?: string) => {
+    const map: Record<string, string> = {
+      pizzas: '🍕', burgers: '🍔', ensaladas: '🥗',
+      bebidas: '🥤', postres: '🍰', pastas: '🍝', carnes: '🥩', otros: '🍽️'
+    };
+    return map[(cat ?? '').toLowerCase()] ?? '🍽️';
   };
 
   const loadData = async () => {
@@ -295,25 +304,47 @@ export const NuevoPedidoPage: React.FC = () => {
             )}
 
             <div>
-              <p className="text-sm font-medium text-gray-700 mb-3">Productos</p>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {products.map((product) => (
-                  <button
-                    key={product.id}
-                    onClick={() => addToCart(product)}
-                    className="text-left rounded-lg border border-gray-200 hover:border-primary-300 hover:shadow-sm overflow-hidden"
-                  >
-                    {product.imagen_url ? (
-                      <img src={imageSrc(product.imagen_url)} alt={product.nombre} className="w-full h-24 object-cover" />
-                    ) : (
-                      <div className="w-full h-24 bg-gray-100"></div>
-                    )}
-                    <div className="p-2">
-                      <p className="text-sm font-medium text-gray-900 line-clamp-1">{product.nombre}</p>
-                      <p className="text-xs text-primary-700 font-semibold">${Number(product.precio).toFixed(2)}</p>
-                    </div>
-                  </button>
-                ))}
+              <p className="text-sm font-semibold text-gray-700 mb-3">Menú disponible</p>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                {products.map((product) => {
+                  const inCart = cart.find((c) => c.product_id === product.id);
+                  return (
+                    <button
+                      key={product.id}
+                      onClick={() => addToCart(product)}
+                      className={`group relative text-left rounded-xl border-2 overflow-hidden transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 ${
+                        inCart
+                          ? 'border-primary-400 shadow-md shadow-primary-100'
+                          : 'border-gray-200 hover:border-primary-300'
+                      }`}
+                    >
+                      {/* Image or emoji fallback */}
+                      {product.imagen_url ? (
+                        <img
+                          src={imageSrc(product.imagen_url)}
+                          alt={product.nombre}
+                          className="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-200"
+                        />
+                      ) : (
+                        <div className="w-full h-32 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-5xl">
+                          {categoryEmoji(product.categoria)}
+                        </div>
+                      )}
+
+                      {/* In-cart badge */}
+                      {inCart && (
+                        <span className="absolute top-2 right-2 bg-primary-600 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow">
+                          x{inCart.cantidad}
+                        </span>
+                      )}
+
+                      <div className="p-2.5">
+                        <p className="text-sm font-semibold text-gray-900 line-clamp-1">{product.nombre}</p>
+                        <p className="text-sm text-primary-700 font-bold mt-0.5">${Number(product.precio).toFixed(2)}</p>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </section>

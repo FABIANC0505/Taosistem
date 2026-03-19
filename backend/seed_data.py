@@ -19,7 +19,7 @@ async def seed_database():
     
     # Create async engine
     engine = create_async_engine(
-        settings.database_url,
+        settings.get_database_url(),
         echo=False,
     )
     

@@ -107,14 +107,20 @@ export const DashboardPage: React.FC = () => {
           </div>
         )}
 
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-2">Bienvenido al panel de administración</p>
+        <div className="animate-fade-in mb-8">
+          <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-600 tracking-tight">Dashboard</h1>
+          <p className="text-gray-500 mt-2 font-medium">Bienvenido al panel de administración</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-6">
           {kpis.map((kpi, idx) => (
-            <div key={idx} className="bg-white rounded-lg shadow p-6">
+            <div 
+              key={idx} 
+              className={`glass-card rounded-2xl p-6 border-t-4 animate-fade-in ${
+                idx % 2 === 0 ? 'border-t-primary-500' : 'border-t-secondary-500'
+              }`}
+              style={{ animationDelay: `${idx * 50}ms`, animationFillMode: 'both' }}
+            >
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-gray-600 text-sm font-medium">{kpi.title}</p>
@@ -129,8 +135,8 @@ export const DashboardPage: React.FC = () => {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white rounded-lg shadow p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+          <div className="glass-card rounded-2xl p-6 animate-slide-up" style={{ animationDelay: '300ms', animationFillMode: 'both' }}>
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Tendencia de Ingresos</h3>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={metrics.ingresos_por_dia}>
@@ -155,7 +161,7 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="glass-card rounded-2xl p-6 animate-slide-up" style={{ animationDelay: '400ms', animationFillMode: 'both' }}>
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Productos</h3>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={metrics.productos_top.slice(0, 5)}>
@@ -176,8 +182,8 @@ export const DashboardPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white rounded-lg shadow p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+          <div className="glass-card rounded-2xl p-6 animate-slide-up" style={{ animationDelay: '500ms', animationFillMode: 'both' }}>
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Pedidos Despachados por Día</h3>
             <ResponsiveContainer width="100%" height={280}>
               <LineChart data={metrics.dispatched_por_dia}>
@@ -191,7 +197,7 @@ export const DashboardPage: React.FC = () => {
             </ResponsiveContainer>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="glass-card rounded-2xl p-6 animate-slide-up" style={{ animationDelay: '600ms', animationFillMode: 'both' }}>
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Pedidos Despachados por Mes</h3>
             <ResponsiveContainer width="100%" height={280}>
               <BarChart data={metrics.dispatched_por_mes}>
@@ -206,9 +212,10 @@ export const DashboardPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-gradient-to-r from-primary-600 to-secondary-600 rounded-lg shadow p-6 text-white">
-            <h3 className="text-lg font-semibold mb-4">Producto Más Vendido</h3>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+          <div className="bg-gradient-to-br from-primary-600 via-secondary-600 to-purple-700 rounded-2xl shadow-xl shadow-primary-500/20 p-8 text-white relative overflow-hidden group hover:scale-[1.02] transition-transform duration-300 animate-slide-up" style={{ animationDelay: '700ms', animationFillMode: 'both' }}>
+            <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-white opacity-10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
+            <h3 className="text-lg font-semibold mb-4 text-primary-100 relative z-10">Producto Más Vendido</h3>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-100">Nombre</p>
@@ -221,7 +228,7 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="glass-card rounded-2xl p-8 animate-slide-up" style={{ animationDelay: '800ms', animationFillMode: 'both' }}>
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Tiempos operativos</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-slate-50 p-4 rounded-lg">
