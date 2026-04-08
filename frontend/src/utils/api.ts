@@ -1,16 +1,11 @@
 import axios, { AxiosInstance } from 'axios';
 import { authStorage } from './authStorage';
+import { getApiBaseUrl } from './runtimeConfig';
 
-const envApiUrl = String(import.meta.env.VITE_API_URL || '').trim();
-const hasInvalidPlaceholder =
-  !envApiUrl ||
-  envApiUrl.includes('tu-backend-production') ||
-  envApiUrl.includes('backend:8000');
-
-const API_BASE_URL = hasInvalidPlaceholder ? 'http://localhost:8000' : envApiUrl;
+const API_BASE_URL = getApiBaseUrl();
 
 export const api: AxiosInstance = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: API_BASE_URL || undefined,
   headers: {
     'Content-Type': 'application/json',
   },

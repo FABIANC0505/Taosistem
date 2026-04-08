@@ -5,6 +5,7 @@ import { MeseroLayout } from '../../components/MeseroLayout';
 import { OrderType, Product } from '../../types';
 import { productService } from '../../services/productService';
 import { OrderItemPayload, ordersService } from '../../services/orders';
+import { resolveMediaUrl } from '../../utils/media';
 
 interface CartItem extends OrderItemPayload {}
 
@@ -33,14 +34,6 @@ export const NuevoPedidoPage: React.FC = () => {
     () => cart.reduce((acc, item) => acc + item.cantidad * item.precio_unitario, 0),
     [cart]
   );
-
-  const imageSrc = (url?: string) => {
-    if (!url) return '';
-    if (url.startsWith('/img/')) return url;   // served from frontend /public/img
-    if (url.startsWith('http://') || url.startsWith('https://')) return url;
-    const base = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-    return `${base}${url}`;
-  };
 
   const categoryEmoji = (cat?: string) => {
     const map: Record<string, string> = {
@@ -321,7 +314,7 @@ export const NuevoPedidoPage: React.FC = () => {
                       {/* Image or emoji fallback */}
                       {product.imagen_url ? (
                         <img
-                          src={imageSrc(product.imagen_url)}
+                          src={resolveMediaUrl(product.imagen_url)}
                           alt={product.nombre}
                           className="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-200"
                         />

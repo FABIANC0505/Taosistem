@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Mail } from 'lucide-react';
 import { authService } from '../services/authService';
+import { isApiBaseUrlConfigured } from '../utils/runtimeConfig';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -9,6 +10,7 @@ export const LoginPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const missingProductionApiConfig = import.meta.env.PROD && !isApiBaseUrlConfigured();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,6 +85,12 @@ export const LoginPage: React.FC = () => {
             <h1 className="gradient-text text-3xl font-bold">RestauTech</h1>
             <p className="mt-2 text-slate-400">Ingresa con tu correo y contrasena</p>
           </div>
+
+          {missingProductionApiConfig && (
+            <div className="mb-6 rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 text-sm text-amber-100">
+              Falta configurar <code>VITE_API_URL</code> para produccion. El frontend necesita la URL publica del backend para iniciar sesion y cargar imagenes.
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>

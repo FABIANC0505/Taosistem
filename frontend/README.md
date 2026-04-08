@@ -46,6 +46,8 @@ VITE_API_URL=http://localhost:8000
 VITE_APP_NAME=RestauTech Admin
 ```
 
+En produccion, por ejemplo en Vercel, debes definir `VITE_API_URL` desde el dashboard con la URL publica real del backend. Si no lo haces, el frontend compilara, pero login, datos e imagenes no funcionaran correctamente.
+
 3. **Iniciar servidor de desarrollo**:
 ```bash
 npm run dev
