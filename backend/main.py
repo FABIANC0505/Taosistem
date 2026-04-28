@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -29,9 +30,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-if not settings.is_r2_enabled:
-    os.makedirs(settings.LOCAL_UPLOAD_DIR, exist_ok=True)
-    app.mount("/uploads", StaticFiles(directory=settings.LOCAL_UPLOAD_DIR), name="uploads")
+local_upload_dir = Path(settings.LOCAL_UPLOAD_DIR)
+if not settings.is_r2_enabled and local_upload_dir.exists():
+    app.mount("/uploads", StaticFiles(directory=str(local_upload_dir)), name="uploads")
 
 # Registrar routers
 app.include_router(auth.router)
