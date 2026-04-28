@@ -20,6 +20,13 @@ class Settings(BaseSettings):
     FRONTEND_URL: str = "http://localhost:5173"
     DATABASE_URL: str | None = None
     CORS_ORIGINS: str | None = None
+    STORAGE_BACKEND: str = "local"
+    LOCAL_UPLOAD_DIR: str = "uploads"
+    R2_ACCOUNT_ID: str | None = None
+    R2_ACCESS_KEY_ID: str | None = None
+    R2_SECRET_ACCESS_KEY: str | None = None
+    R2_BUCKET_NAME: str | None = None
+    R2_PUBLIC_BASE_URL: str | None = None
 
     def get_database_url(self) -> str:
         if self.DATABASE_URL:
@@ -58,6 +65,16 @@ class Settings(BaseSettings):
             "http://localhost:5173",
             self.FRONTEND_URL,
         ]
+
+    @property
+    def is_r2_enabled(self) -> bool:
+        return self.STORAGE_BACKEND.lower() == "r2"
+
+    @property
+    def r2_endpoint_url(self) -> str:
+        if not self.R2_ACCOUNT_ID:
+            raise ValueError("R2_ACCOUNT_ID no configurado")
+        return f"https://{self.R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
 
     class Config:
         env_file = ".env"

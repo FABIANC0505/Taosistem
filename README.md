@@ -47,6 +47,19 @@ CORS_ORIGINS=http://localhost:3000,http://localhost:5173
 
 El backend crea las tablas automaticamente al iniciar.
 
+Para usar Cloudflare R2 (recomendado en Vercel), agrega tambien:
+
+```env
+STORAGE_BACKEND=r2
+R2_ACCOUNT_ID=your_cloudflare_account_id
+R2_ACCESS_KEY_ID=your_r2_access_key_id
+R2_SECRET_ACCESS_KEY=your_r2_secret_access_key
+R2_BUCKET_NAME=restautech-products
+R2_PUBLIC_BASE_URL=https://pub-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.r2.dev
+```
+
+Si no usas R2, deja `STORAGE_BACKEND=local` (valor por defecto) para guardar en disco local.
+
 ### Frontend
 
 Copia `frontend/.env.example` a `frontend/.env`:
@@ -70,5 +83,6 @@ URLs:
 
 ## Notas
 
-- Las imagenes de productos se guardan en `backend/uploads/`.
+- Las imagenes de productos se guardan en Cloudflare R2 cuando `STORAGE_BACKEND=r2`.
+- En modo local (`STORAGE_BACKEND=local`) se guardan en `backend/uploads/`.
 - El proyecto ya no usa Docker ni `docker-compose`.

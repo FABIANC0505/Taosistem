@@ -29,8 +29,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-os.makedirs("uploads", exist_ok=True)
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+if not settings.is_r2_enabled:
+    os.makedirs(settings.LOCAL_UPLOAD_DIR, exist_ok=True)
+    app.mount("/uploads", StaticFiles(directory=settings.LOCAL_UPLOAD_DIR), name="uploads")
 
 # Registrar routers
 app.include_router(auth.router)

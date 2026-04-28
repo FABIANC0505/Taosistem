@@ -3,10 +3,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.core.database import get_db
 from app.models.producto import Product
+from app.services.storage import StorageError, upload_product_image
 from pydantic import BaseModel
 from typing import List, Optional
-import os
-from uuid import uuid4
 
 router = APIRouter(prefix="/products", tags=["products"])
 
@@ -90,17 +89,10 @@ async def create_product(
     
     imagen_url = None
     if imagen:
-        # Guardar imagen
-        file_ext = imagen.filename.split(".")[-1]
-        file_name = f"{uuid4()}.{file_ext}"
-        file_path = f"uploads/products/{file_name}"
-        
-        os.makedirs("uploads/products", exist_ok=True)
-        
-        with open(file_path, "wb") as f:
-            f.write(await imagen.read())
-        
-        imagen_url = f"/uploads/products/{file_name}"
+        try:
+            imagen_url = await upload_product_image(imagen)
+        except StorageError as exc:
+            raise HTTPException(status_code=500, detail=f"Error subiendo imagen: {exc}") from exc
     
     new_product = Product(
         nombre=nombre,
@@ -160,16 +152,10 @@ async def update_product(
     if disponible is not None:
         product.disponible = disponible
     if imagen:
-        file_ext = imagen.filename.split(".")[-1]
-        file_name = f"{uuid4()}.{file_ext}"
-        file_path = f"uploads/products/{file_name}"
-        
-        os.makedirs("uploads/products", exist_ok=True)
-        
-        with open(file_path, "wb") as f:
-            f.write(await imagen.read())
-        
-        product.imagen_url = f"/uploads/products/{file_name}"
+        try:
+            product.imagen_url = await upload_product_image(imagen)
+        except StorageError as exc:
+            raise HTTPException(status_code=500, detail=f"Error subiendo imagen: {exc}") from exc
     
     await db.commit()
     await db.refresh(product)
