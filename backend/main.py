@@ -11,7 +11,10 @@ from app.routers import auth, users, products, metrics, orders, settings as sett
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await init_db()
+    if settings.should_init_db_on_startup:
+        await init_db()
+    else:
+        print("DB init omitida en runtime serverless")
     print("RestauTech API iniciada")
     yield
     print("RestauTech API detenida")

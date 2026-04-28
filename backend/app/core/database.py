@@ -2,9 +2,22 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from sqlalchemy.orm import DeclarativeBase
 
 from app.core.config import settings
+from pathlib import Path
+
+database_url = settings.get_database_url()
+# Si usamos SQLite, aseguramos que la carpeta del archivo exista antes de abrir conexión
+if database_url.startswith("sqlite+"):
+    try:
+        sqlite_path = database_url.split("sqlite+aiosqlite:///", 1)[1]
+    except Exception:
+        sqlite_path = None
+    if sqlite_path:
+        parent = Path(sqlite_path).parent
+        if str(parent) and not parent.exists():
+            parent.mkdir(parents=True, exist_ok=True)
 
 engine = create_async_engine(
-    settings.get_database_url(),
+    database_url,
     echo=settings.APP_ENV == "development",
 )
 AsyncSessionLocal = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)

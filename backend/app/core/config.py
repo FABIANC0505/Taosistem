@@ -1,3 +1,5 @@
+import os
+
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
@@ -31,6 +33,11 @@ class Settings(BaseSettings):
     def get_database_url(self) -> str:
         if self.DATABASE_URL:
             db_url = self.DATABASE_URL
+        # En desarrollo permitimos usar SQLite local para evitar depender de MySQL
+        use_sqlite = os.getenv("USE_SQLITE", "1").lower() in ("1", "true", "yes")
+        if self.APP_ENV == "development" and use_sqlite and not self.DATABASE_URL:
+            sqlite_path = os.getenv("SQLITE_PATH", "dev.db")
+            return f"sqlite+aiosqlite:///{sqlite_path}"
         elif self.MYSQL_URL:
             db_url = self.MYSQL_URL
         elif self.MYSQLHOST and self.MYSQLUSER and self.MYSQLDATABASE:
@@ -75,6 +82,14 @@ class Settings(BaseSettings):
         if not self.R2_ACCOUNT_ID:
             raise ValueError("R2_ACCOUNT_ID no configurado")
         return f"https://{self.R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+
+    @property
+    def is_vercel_deployment(self) -> bool:
+        return os.getenv("VERCEL", "").lower() in {"1", "true", "yes"}
+
+    @property
+    def should_init_db_on_startup(self) -> bool:
+        return not self.is_vercel_deployment
 
     class Config:
         env_file = ".env"

@@ -60,6 +60,19 @@ R2_PUBLIC_BASE_URL=https://pub-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.r2.dev
 
 Si no usas R2, deja `STORAGE_BACKEND=local` (valor por defecto) para guardar en disco local.
 
+Uso de SQLite en desarrollo
+--------------------------
+
+Si no quieres depender de una instancia MySQL local durante desarrollo, puedes usar SQLite.
+Activa en `backend/.env` o en tu entorno:
+
+```
+USE_SQLITE=1
+SQLITE_PATH=backend/dev.db
+```
+
+El proyecto usará `sqlite+aiosqlite` automáticamente cuando `APP_ENV=development` y `USE_SQLITE` esté activo.
+
 ### Frontend
 
 Copia `frontend/.env.example` a `frontend/.env`:
