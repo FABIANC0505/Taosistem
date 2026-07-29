@@ -1,108 +1,132 @@
 # RestauTech
 
-Proyecto reducido al stack minimo necesario para correr localmente:
+Sistema local para la operación de un restaurante, con panel administrativo y módulos para meseros, cocina y caja.
 
-- `backend/`: FastAPI + SQLAlchemy async + MySQL
-- `frontend/`: React + TypeScript + Vite
-- `start-dev.ps1`: arranque local
+## Stack actual
 
-## Estructura
+- `frontend/`: React 19, TypeScript, Vite, React Router, Tailwind CSS y Recharts.
+- `backend/`: FastAPI, Uvicorn, Pydantic y autenticación JWT.
+- Persistencia local: SQLite mediante `aiosqlite`.
+- Persistencia de producción: configuración compatible con MySQL mediante `DATABASE_URL`.
+- Imágenes: almacenamiento local o Cloudflare R2.
 
-```text
-backend/
-  app/
-  uploads/
-  requirements.txt
-  .env.example
-frontend/
-  src/
-  public/
-  package.json
-  .env.example
-start-dev.ps1
-README.md
-```
+## Funcionalidades
+
+- Inicio de sesión y control de acceso por rol.
+- Panel administrativo.
+- Gestión de usuarios y productos.
+- Descuentos y configuración del restaurante.
+- Historial de pedidos.
+- Módulos para mesero, cocina y cajero.
+- API documentada con Swagger.
 
 ## Requisitos
 
-- Python 3.11+
-- Node.js 18+
-- MySQL 8 corriendo localmente
+- Python 3.11 o superior.
+- Node.js 18 o superior.
+- PowerShell en Windows para usar `start-dev.ps1`.
 
-## Configuracion
+No se necesita MySQL para la validación local si se utiliza SQLite.
+
+## Configuración local
 
 ### Backend
 
-Copia `backend/.env.example` a `backend/.env` y ajusta:
+Copia `backend/.env.example` como `backend/.env`. Para SQLite local, configura:
 
 ```env
-MYSQL_USER=taosistem_app
-MYSQL_PASSWORD=050523
-MYSQL_DB=bdtaosistem
-MYSQL_HOST=localhost
-MYSQL_PORT=3306
+APP_ENV=development
+USE_SQLITE=1
+SQLITE_PATH=dev.db
+JWT_SECRET_KEY=change-this-in-development
 FRONTEND_URL=http://localhost:3000
 CORS_ORIGINS=http://localhost:3000,http://localhost:5173
+STORAGE_BACKEND=local
 ```
 
-El backend crea las tablas automaticamente al iniciar.
-
-Para usar Cloudflare R2 (recomendado en Vercel), agrega tambien:
-
-```env
-STORAGE_BACKEND=r2
-R2_ACCOUNT_ID=your_cloudflare_account_id
-R2_ACCESS_KEY_ID=your_r2_access_key_id
-R2_SECRET_ACCESS_KEY=your_r2_secret_access_key
-R2_BUCKET_NAME=restautech-products
-R2_PUBLIC_BASE_URL=https://pub-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.r2.dev
-```
-
-Checklist para desplegar en Vercel:
-
-- `DATABASE_URL` = `mysql://USER:PASS@HOST:PORT/DATABASE` (o `mysql+aiomysql://...`)
-- `STORAGE_BACKEND` = `r2`
-- `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, `R2_PUBLIC_BASE_URL`
-
-
-Si no usas R2, deja `STORAGE_BACKEND=local` (valor por defecto) para guardar en disco local.
-
-Uso de SQLite en desarrollo
---------------------------
-
-Si no quieres depender de una instancia MySQL local durante desarrollo, puedes usar SQLite.
-Activa en `backend/.env` o en tu entorno:
-
-```
-USE_SQLITE=1
-SQLITE_PATH=backend/dev.db
-```
-
-El proyecto usará `sqlite+aiosqlite` automáticamente cuando `APP_ENV=development` y `USE_SQLITE` esté activo.
+En desarrollo, `SQLITE_PATH=dev.db` se interpreta desde `backend/`, por lo que la base usada es `backend/dev.db`.
 
 ### Frontend
 
-Copia `frontend/.env.example` a `frontend/.env`:
+Copia `frontend/.env.example` como `frontend/.env`:
 
 ```env
 VITE_API_URL=http://localhost:8000
 VITE_APP_NAME=RestauTech
 ```
 
-## Ejecutar
+Usa `localhost` durante las pruebas. La configuración CORS actual contempla `http://localhost:3000`; abrir el frontend con `127.0.0.1:3000` puede provocar errores de red en las llamadas a la API.
+
+## Ejecutar en local
+
+Desde la raíz del proyecto:
 
 ```powershell
 .\start-dev.ps1
 ```
 
-URLs:
+El script crea el entorno virtual del backend si no existe, instala dependencias y levanta ambos servicios.
 
-- Frontend: `http://localhost:3000`
-- Backend: `http://localhost:8000`
-- Swagger: `http://localhost:8000/docs`
+URLs locales:
 
-## Notas
+- Aplicación: <http://localhost:3000>
+- API: <http://localhost:8000>
+- Health check: <http://localhost:8000/health>
+- Swagger: <http://localhost:8000/docs>
 
-- Las imagenes de productos se guardan en Cloudflare R2 cuando `STORAGE_BACKEND=r2`.
-- En modo local (`STORAGE_BACKEND=local`) se guardan en `backend/uploads/`.
-- El proyecto ya no usa Docker ni `docker-compose`.
+Para ejecutar los servicios manualmente:
+
+```powershell
+# Backend
+cd backend
+python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
+
+# Frontend, en otra terminal
+cd frontend
+npm install
+npm run dev
+```
+
+## Validación
+
+Compilar el frontend:
+
+```powershell
+cd frontend
+npm run build
+```
+
+Comprobar la API:
+
+```powershell
+Invoke-WebRequest http://localhost:8000/health
+```
+
+La respuesta esperada es `200 OK` con un JSON similar a:
+
+```json
+{"status":"ok","app":"RestauTech"}
+```
+
+## Estado conocido
+
+- El frontend compila correctamente con `npm run build`.
+- El login y la navegación por roles funcionan en local.
+- Productos, descuentos y configuración cargan en el panel administrativo.
+- Algunas vistas que consultan métricas, usuarios o historial todavía reportan errores cuando se ejecutan con SQLite porque conservan consultas basadas en SQLAlchemy mientras el adaptador local usa `aiosqlite`. Estas rutas requieren una unificación del acceso a datos antes de considerarse listas para producción.
+
+## Producción
+
+Para un despliegue con MySQL y Cloudflare R2, configura las variables de entorno del proveedor:
+
+```env
+DATABASE_URL=mysql://USER:PASSWORD@HOST:PORT/DATABASE
+STORAGE_BACKEND=r2
+R2_ACCOUNT_ID=...
+R2_ACCESS_KEY_ID=...
+R2_SECRET_ACCESS_KEY=...
+R2_BUCKET_NAME=...
+R2_PUBLIC_BASE_URL=https://...
+```
+
+No subas archivos `.env`, contraseñas, tokens ni bases SQLite al repositorio.
