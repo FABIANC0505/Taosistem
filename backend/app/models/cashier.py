@@ -45,7 +45,7 @@ class CashMovement(Base):
     session_id: Mapped[str] = mapped_column(String(36), ForeignKey("cash_sessions.id"), nullable=False, index=True)
     cashier_user_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id"), nullable=False, index=True)
     movement_type: Mapped[CashMovementType] = mapped_column(
-        SAEnum(CashMovementType, native_enum=False),
+        SAEnum(CashMovementType, native_enum=False, values_callable=lambda values: [item.value for item in values]),
         nullable=False,
     )
     amount: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
@@ -63,7 +63,7 @@ class CashPayment(Base):
     order_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("orders.id"), nullable=True, index=True)
     mesa_numero: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
     payment_method: Mapped[PaymentMethod] = mapped_column(
-        SAEnum(PaymentMethod, native_enum=False),
+        SAEnum(PaymentMethod, native_enum=False, values_callable=lambda values: [item.value for item in values]),
         nullable=False,
     )
     amount: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)

@@ -1,203 +1,78 @@
-import aiosqlite
-import json
+from __future__ import annotations
+
 from pathlib import Path
+from typing import Any
+
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import declarative_base
+
 from app.core.config import settings
-try:
-    from sqlalchemy.orm import declarative_base
-    Base = declarative_base()
-except Exception:
-    Base = None
-
-# Note: SQLAlchemy `Base` removed during migration to aiosqlite.
-# If any legacy modules import `Base`, update them to use the new DB helpers.
 
 
-def _sqlite_path() -> str:
-    url = settings.get_database_url()
-    if url.startswith("sqlite+aiosqlite:///"):
-        return url.split("sqlite+aiosqlite:///", 1)[1]
-    if url.startswith("sqlite:///"):
-        return url.split("sqlite:///", 1)[1]
-    return "dev.db"
+Base = declarative_base()
+DATABASE_URL = settings.get_database_url()
+
+engine_kwargs: dict[str, Any] = {}
+if DATABASE_URL.startswith("mysql"):
+    engine_kwargs["pool_pre_ping"] = True
+
+engine = create_async_engine(DATABASE_URL, **engine_kwargs)
+session_factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 
 async def get_db():
-    db_path = _sqlite_path()
-    Path(db_path).parent.mkdir(parents=True, exist_ok=True)
-    conn = await aiosqlite.connect(db_path)
-    conn.row_factory = aiosqlite.Row
-    try:
-        yield conn
-    finally:
-        await conn.close()
+    async with session_factory() as session:
+        try:
+            yield session
+        finally:
+            if session.in_transaction():
+                await session.rollback()
 
 
-async def execute(db, query: str, params: tuple | list | None = None):
-    if params is None:
-        params = ()
-    cur = await db.execute(query, params)
+def _bind_qmark_params(query: str, params: tuple | list | None) -> tuple[str, dict[str, Any]]:
+    values = tuple(params or ())
+    bind_names = [f"param_{index}" for index in range(len(values))]
+    query_with_named_params = query
+    for bind_name in bind_names:
+        query_with_named_params = query_with_named_params.replace("?", f":{bind_name}", 1)
+    return query_with_named_params, dict(zip(bind_names, values))
+
+
+async def execute(db: AsyncSession, query: str, params: tuple | list | None = None):
+    prepared_query, prepared_params = _bind_qmark_params(query, params)
+    result = await db.execute(text(prepared_query), prepared_params)
     await db.commit()
-    return cur
+    return result
 
 
-async def fetch_all(db, query: str, params: tuple | list | None = None):
-    cur = await db.execute(query, params or ())
-    rows = await cur.fetchall()
-    return [dict(row) for row in rows]
+async def fetch_all(db: AsyncSession, query: str, params: tuple | list | None = None):
+    prepared_query, prepared_params = _bind_qmark_params(query, params)
+    result = await db.execute(text(prepared_query), prepared_params)
+    return [dict(row) for row in result.mappings().all()]
 
 
-async def fetch_one(db, query: str, params: tuple | list | None = None):
-    cur = await db.execute(query, params or ())
-    row = await cur.fetchone()
+async def fetch_one(db: AsyncSession, query: str, params: tuple | list | None = None):
+    prepared_query, prepared_params = _bind_qmark_params(query, params)
+    result = await db.execute(text(prepared_query), prepared_params)
+    row = result.mappings().first()
     return dict(row) if row else None
 
 
 async def init_db():
-    db_path = _sqlite_path()
-    Path(db_path).parent.mkdir(parents=True, exist_ok=True)
-    async with aiosqlite.connect(db_path) as db:
-        await db.execute("PRAGMA foreign_keys = ON;")
+    from app.models.app_setting import AppSetting  # noqa: F401
+    from app.models.cashier import CashMovement, CashPayment, CashSession, WaiterAlert  # noqa: F401
+    from app.models.orden import Order  # noqa: F401
+    from app.models.producto import Product  # noqa: F401
+    from app.models.user import User  # noqa: F401
 
-        await db.execute(
-            """
-            CREATE TABLE IF NOT EXISTS users (
-                id VARCHAR(36) PRIMARY KEY,
-                nombre VARCHAR(100) NOT NULL,
-                email VARCHAR(200) NOT NULL UNIQUE,
-                password_hash VARCHAR(255) NOT NULL,
-                rol VARCHAR(6) NOT NULL,
-                activo BOOLEAN NOT NULL,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL
-            );
-            """
-        )
+    if DATABASE_URL.startswith("sqlite"):
+        sqlite_path = DATABASE_URL.rsplit("/", 1)[-1]
+        Path(sqlite_path).parent.mkdir(parents=True, exist_ok=True)
 
-        await db.execute(
-            """
-            CREATE TABLE IF NOT EXISTS app_settings (
-                "key" VARCHAR(100) PRIMARY KEY,
-                value VARCHAR(255) NOT NULL,
-                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL
-            );
-            """
-        )
+    async with engine.begin() as connection:
+        await connection.run_sync(Base.metadata.create_all)
 
-        await db.execute(
-            """
-            CREATE TABLE IF NOT EXISTS products (
-                id VARCHAR(36) PRIMARY KEY,
-                nombre VARCHAR(200) NOT NULL,
-                precio NUMERIC(10,2) NOT NULL,
-                descripcion TEXT,
-                imagen_url VARCHAR(500),
-                categoria VARCHAR(100) NOT NULL,
-                disponible BOOLEAN NOT NULL,
-                agotado_por VARCHAR(36),
-                agotado_at DATETIME,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                FOREIGN KEY(agotado_por) REFERENCES users(id)
-            );
-            """
-        )
 
-        await db.execute(
-            """
-            CREATE TABLE IF NOT EXISTS orders (
-                id VARCHAR(36) PRIMARY KEY,
-                id_mesero VARCHAR(36) NOT NULL,
-                mesa_numero INTEGER,
-                tipo_pedido VARCHAR(20) NOT NULL,
-                cliente_nombre VARCHAR(150),
-                cliente_telefono VARCHAR(30),
-                direccion_entrega TEXT,
-                status VARCHAR(14) NOT NULL,
-                items TEXT NOT NULL,
-                notas TEXT,
-                total_amount NUMERIC(10,2) NOT NULL,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                cocinando_at DATETIME,
-                served_at DATETIME,
-                entregado_at DATETIME,
-                cancelado_at DATETIME,
-                cancelado_por VARCHAR(36),
-                motivo_cancelacion TEXT,
-                FOREIGN KEY(id_mesero) REFERENCES users(id),
-                FOREIGN KEY(cancelado_por) REFERENCES users(id)
-            );
-            """
-        )
-
-        await db.execute(
-            """
-            CREATE TABLE IF NOT EXISTS cash_sessions (
-                id VARCHAR(36) PRIMARY KEY,
-                cashier_user_id VARCHAR(36) NOT NULL,
-                opening_amount NUMERIC(10,2) NOT NULL,
-                opening_note TEXT,
-                opened_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                closing_counted_amount NUMERIC(10,2),
-                closing_note TEXT,
-                closed_at DATETIME,
-                FOREIGN KEY(cashier_user_id) REFERENCES users(id)
-            );
-            """
-        )
-
-        await db.execute(
-            """
-            CREATE TABLE IF NOT EXISTS waiter_alerts (
-                id VARCHAR(36) PRIMARY KEY,
-                mesa_numero INTEGER NOT NULL,
-                cashier_user_id VARCHAR(36) NOT NULL,
-                mesero_user_id VARCHAR(36),
-                message TEXT NOT NULL,
-                resolved BOOLEAN NOT NULL,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                resolved_at DATETIME,
-                FOREIGN KEY(cashier_user_id) REFERENCES users(id),
-                FOREIGN KEY(mesero_user_id) REFERENCES users(id)
-            );
-            """
-        )
-
-        await db.execute(
-            """
-            CREATE TABLE IF NOT EXISTS cash_movements (
-                id VARCHAR(36) PRIMARY KEY,
-                session_id VARCHAR(36) NOT NULL,
-                cashier_user_id VARCHAR(36) NOT NULL,
-                movement_type VARCHAR(18) NOT NULL,
-                amount NUMERIC(10,2) NOT NULL,
-                description TEXT NOT NULL,
-                related_order_id VARCHAR(36),
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                FOREIGN KEY(session_id) REFERENCES cash_sessions(id),
-                FOREIGN KEY(cashier_user_id) REFERENCES users(id),
-                FOREIGN KEY(related_order_id) REFERENCES orders(id)
-            );
-            """
-        )
-
-        await db.execute(
-            """
-            CREATE TABLE IF NOT EXISTS cash_payments (
-                id VARCHAR(36) PRIMARY KEY,
-                session_id VARCHAR(36) NOT NULL,
-                cashier_user_id VARCHAR(36) NOT NULL,
-                order_id VARCHAR(36),
-                mesa_numero INTEGER,
-                payment_method VARCHAR(13) NOT NULL,
-                amount NUMERIC(10,2) NOT NULL,
-                reference_note TEXT,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                FOREIGN KEY(session_id) REFERENCES cash_sessions(id),
-                FOREIGN KEY(cashier_user_id) REFERENCES users(id),
-                FOREIGN KEY(order_id) REFERENCES orders(id)
-            );
-            """
-        )
-
-        await db.commit()
-        print("SQLite DB inicializada y tablas creadas")
+async def close_db():
+    await engine.dispose()

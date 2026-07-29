@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.core.config import settings
-from app.core.database import init_db
+from app.core.database import close_db, init_db
 
 
 @asynccontextmanager
@@ -21,6 +21,7 @@ async def lifespan(app: FastAPI):
         print("DB init omitida en runtime serverless")
     print("RestauTech API iniciada")
     yield
+    await close_db()
     print("RestauTech API detenida")
 
 

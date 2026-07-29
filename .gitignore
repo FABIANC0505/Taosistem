@@ -30,6 +30,11 @@ node_modules/
 dist/
 *.local
 
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+
 # Env files (sensibles)
 .env
 .env.local

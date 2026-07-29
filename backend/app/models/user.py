@@ -23,7 +23,10 @@ class User(Base):
     email:         Mapped[str]      = mapped_column(String(200), unique=True,
                                                     nullable=False, index=True)
     password_hash: Mapped[str]      = mapped_column(String(255), nullable=False)
-    rol:           Mapped[UserRole] = mapped_column(SAEnum(UserRole, native_enum=False), nullable=False)
+    rol:           Mapped[UserRole] = mapped_column(
+        SAEnum(UserRole, native_enum=False, values_callable=lambda values: [item.value for item in values]),
+        nullable=False,
+    )
     activo:        Mapped[bool]     = mapped_column(Boolean, default=True)
     created_at:    Mapped[datetime] = mapped_column(DateTime(),
                                                     server_default=func.now())

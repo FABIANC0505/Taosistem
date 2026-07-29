@@ -1,5 +1,6 @@
 import enum
 from uuid import uuid4
+from typing import List
 
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 from pydantic import BaseModel, EmailStr, field_validator
@@ -15,6 +16,14 @@ class UserRole(str, enum.Enum):
     CAJERO = "cajero"
 
 router = APIRouter(prefix="/users", tags=["users"])
+
+
+class UserContext(dict):
+    def __getattr__(self, name: str):
+        try:
+            return self[name]
+        except KeyError as exc:
+            raise AttributeError(name) from exc
 
 async def get_current_user(
     authorization: str = Header(default=None),
@@ -36,10 +45,10 @@ async def get_current_user(
     if not user:
         raise HTTPException(status_code=401, detail="Usuario no encontrado")
 
-    if not user.activo:
+    if not user.get("activo"):
         raise HTTPException(status_code=403, detail="Usuario inactivo")
     
-    return user
+    return UserContext(user)
 
 
 async def require_admin(current_user = Depends(get_current_user)):

@@ -27,8 +27,10 @@ class Order(Base):
     cliente_nombre:     Mapped[str | None]  = mapped_column(String(150), nullable=True)
     cliente_telefono:   Mapped[str | None]  = mapped_column(String(30), nullable=True)
     direccion_entrega:  Mapped[str | None]  = mapped_column(Text, nullable=True)
-    status:             Mapped[OrderStatus] = mapped_column(SAEnum(OrderStatus, native_enum=False),
-                                                            default=OrderStatus.PENDIENTE)
+    status:             Mapped[OrderStatus] = mapped_column(
+        SAEnum(OrderStatus, native_enum=False, values_callable=lambda values: [item.value for item in values]),
+        default=OrderStatus.PENDIENTE,
+    )
     items:              Mapped[dict]        = mapped_column(JSON, nullable=False)
     notas:              Mapped[str]         = mapped_column(Text, nullable=True)
     total_amount:       Mapped[float]       = mapped_column(Numeric(10, 2), nullable=False)

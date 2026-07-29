@@ -117,6 +117,13 @@ La respuesta esperada es `200 OK` con un JSON similar a:
 
 ## Producción
 
+El repositorio está preparado como monorepo para desplegar cada aplicación por separado:
+
+- Railway: configura `backend/` como Root Directory. Usa `backend/railway.json`, el comando `uvicorn main:app --host 0.0.0.0 --port $PORT` y el health check `/health`.
+- Vercel: configura `frontend/` como Root Directory, `npm run build` como Build Command y `dist` como Output Directory. `frontend/vercel.json` mantiene funcionando las rutas de React Router.
+- En Vercel define `VITE_API_URL` con la URL pública de Railway.
+- En Railway define `CORS_ORIGINS` con la URL pública de Vercel y usa MySQL como base de datos.
+
 Para un despliegue con MySQL y Cloudflare R2, configura las variables de entorno del proveedor:
 
 ```env
