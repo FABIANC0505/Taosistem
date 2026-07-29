@@ -1,6 +1,8 @@
 import os
+from typing import ClassVar
 
 from pydantic_settings import BaseSettings
+
 
 class Settings(BaseSettings):
     MYSQL_USER: str = "root"
@@ -91,8 +93,15 @@ class Settings(BaseSettings):
     def should_init_db_on_startup(self) -> bool:
         return not self.is_vercel_deployment
 
-    class Config:
-        env_file = ".env"
-        extra = "ignore"
+    model_config: ClassVar[dict] = {
+        "env_file": ".env",
+        "extra": "ignore",
+    }
+
+    def validate_security_settings(self) -> None:
+        if self.JWT_SECRET_KEY in {"change-me-in-production", ""}:
+            raise ValueError("JWT_SECRET_KEY debe configurarse en producción")
+
 
 settings = Settings()
+settings.validate_security_settings()

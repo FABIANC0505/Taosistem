@@ -1,10 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Header
-from app.core.database import get_db, fetch_one, fetch_all, execute
-from app.core.security import hash_password, verify_password, create_access_token
-from pydantic import BaseModel
-from typing import Optional
-from uuid import uuid4
+import re
 import enum
+from uuid import uuid4
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel, EmailStr, field_validator
+
+from app.core.database import execute, fetch_one, get_db
+from app.core.security import create_access_token, hash_password, verify_password
 
 
 class UserRole(str, enum.Enum):
@@ -16,13 +18,35 @@ class UserRole(str, enum.Enum):
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 class LoginRequest(BaseModel):
-    email: str
+    email: EmailStr
     password: str
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, value: str) -> str:
+        if len(value.strip()) < 8:
+            raise ValueError("La contraseña debe tener al menos 8 caracteres")
+        return value
+
 
 class RegisterRequest(BaseModel):
     nombre: str
-    email: str
+    email: EmailStr
     password: str
+
+    @field_validator("nombre")
+    @classmethod
+    def validate_name(cls, value: str) -> str:
+        if len(value.strip()) < 2:
+            raise ValueError("El nombre debe tener al menos 2 caracteres")
+        return value.strip()
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, value: str) -> str:
+        if len(value.strip()) < 8:
+            raise ValueError("La contraseña debe tener al menos 8 caracteres")
+        return value
 
 class AuthResponse(BaseModel):
     access_token: str
@@ -35,8 +59,8 @@ class AuthResponse(BaseModel):
 @router.post("/login", response_model=AuthResponse)
 async def login(credentials: LoginRequest, db=Depends(get_db)):
     """Autenticar usuario y obtener token JWT"""
-    # Buscar usuario por email
-    user = await fetch_one(db, "SELECT * FROM users WHERE email = ?", (credentials.email,))
+    normalized_email = str(credentials.email).lower().strip()
+    user = await fetch_one(db, "SELECT * FROM users WHERE email = ?", (normalized_email,))
 
     # Verificar credenciales
     if not user or not verify_password(credentials.password, user.get("password_hash")):
@@ -70,7 +94,8 @@ async def login(credentials: LoginRequest, db=Depends(get_db)):
 async def register(data: RegisterRequest, db=Depends(get_db)):
     """Registrar nuevo usuario (solo para primeros registros o admin)"""
     # Verificar si ya existe
-    existing = await fetch_one(db, "SELECT id FROM users WHERE email = ?", (data.email,))
+    normalized_email = str(data.email).lower().strip()
+    existing = await fetch_one(db, "SELECT id FROM users WHERE email = ?", (normalized_email,))
     if existing:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -88,7 +113,7 @@ async def register(data: RegisterRequest, db=Depends(get_db)):
     await execute(
         db,
         "INSERT INTO users (id, nombre, email, password_hash, rol, activo) VALUES (?, ?, ?, ?, ?, ?)",
-        (user_id, data.nombre, data.email, password_hash, rol, 1),
+        (user_id, data.nombre.strip(), normalized_email, password_hash, rol, 1),
     )
 
     user = await fetch_one(db, "SELECT * FROM users WHERE id = ?", (user_id,))

@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, Header, HTTPException, status
-from app.core.database import get_db, fetch_one, fetch_all, execute
-from app.core.security import create_access_token, verify_token, hash_password
-from pydantic import BaseModel
-from typing import List, Optional
-from uuid import uuid4
 import enum
+from uuid import uuid4
+
+from fastapi import APIRouter, Depends, Header, HTTPException, status
+from pydantic import BaseModel, EmailStr, field_validator
+
+from app.core.database import execute, fetch_all, fetch_one, get_db
+from app.core.security import hash_password, verify_token
 
 
 class UserRole(str, enum.Enum):
@@ -55,15 +56,38 @@ class UserBase(BaseModel):
 
 class UserCreate(BaseModel):
     nombre: str
-    email: str
+    email: EmailStr
     password: str
     rol: UserRole
 
+    @field_validator("nombre")
+    @classmethod
+    def validate_name(cls, value: str) -> str:
+        if len(value.strip()) < 2:
+            raise ValueError("El nombre debe tener al menos 2 caracteres")
+        return value.strip()
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, value: str) -> str:
+        if len(value.strip()) < 8:
+            raise ValueError("La contraseña debe tener al menos 8 caracteres")
+        return value
+
 class UserUpdate(BaseModel):
-    nombre: Optional[str] = None
-    email: Optional[str] = None
-    rol: Optional[UserRole] = None
-    activo: Optional[bool] = None
+    nombre: str | None = None
+    email: EmailStr | None = None
+    rol: UserRole | None = None
+    activo: bool | None = None
+
+    @field_validator("nombre")
+    @classmethod
+    def validate_name(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        if len(value.strip()) < 2:
+            raise ValueError("El nombre debe tener al menos 2 caracteres")
+        return value.strip()
 
 class UserResponse(UserBase):
     id: str
@@ -120,8 +144,8 @@ async def create_user(
     current_user = Depends(require_admin),
 ):
     """Crear nuevo usuario"""
-    # Verificar si email existe
-    existing = await fetch_one(db, "SELECT id FROM users WHERE email = ?", (user_data.email,))
+    normalized_email = str(user_data.email).lower().strip()
+    existing = await fetch_one(db, "SELECT id FROM users WHERE email = ?", (normalized_email,))
     if existing:
         raise HTTPException(status_code=400, detail="Email ya existe")
 
@@ -130,7 +154,7 @@ async def create_user(
     await execute(
         db,
         "INSERT INTO users (id, nombre, email, password_hash, rol, activo) VALUES (?, ?, ?, ?, ?, ?)",
-        (user_id, user_data.nombre, user_data.email, password_hash, user_data.rol.value, 1),
+        (user_id, user_data.nombre.strip(), normalized_email, password_hash, user_data.rol.value, 1),
     )
 
     user = await fetch_one(db, "SELECT * FROM users WHERE id = ?", (user_id,))
@@ -155,6 +179,8 @@ async def update_user(
     user = await fetch_one(db, "SELECT * FROM users WHERE id = ?", (user_id,))
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    if user.get("rol") == UserRole.ADMIN.value and user_id == current_user.get("id") and user_data.activo is False:
+        raise HTTPException(status_code=400, detail="No puedes desactivar tu propio usuario administrador")
 
     updates = []
     params = []
@@ -163,7 +189,7 @@ async def update_user(
         params.append(user_data.nombre)
     if user_data.email:
         updates.append("email = ?")
-        params.append(user_data.email)
+        params.append(str(user_data.email).lower().strip())
     if user_data.rol:
         updates.append("rol = ?")
         params.append(user_data.rol.value)
@@ -194,9 +220,11 @@ async def delete_user(
     current_user = Depends(require_admin),
 ):
     """Eliminar usuario"""
-    user = await fetch_one(db, "SELECT id FROM users WHERE id = ?", (user_id,))
+    user = await fetch_one(db, "SELECT id, rol FROM users WHERE id = ?", (user_id,))
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    if user.get("rol") == UserRole.ADMIN.value:
+        raise HTTPException(status_code=400, detail="No puedes eliminar un usuario administrador")
     await execute(db, "DELETE FROM users WHERE id = ?", (user_id,))
     return {"detail": "Usuario eliminado"}
 
@@ -233,6 +261,8 @@ async def deactivate_user(
     user = await fetch_one(db, "SELECT * FROM users WHERE id = ?", (user_id,))
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    if user.get("id") == current_user.get("id"):
+        raise HTTPException(status_code=400, detail="No puedes desactivar tu propio usuario")
     await execute(db, "UPDATE users SET activo = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?", (user_id,))
     user = await fetch_one(db, "SELECT * FROM users WHERE id = ?", (user_id,))
     return UserResponse(

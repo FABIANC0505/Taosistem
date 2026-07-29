@@ -2,9 +2,12 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.core.config import settings
 from app.core.database import init_db
@@ -21,6 +24,17 @@ async def lifespan(app: FastAPI):
     print("RestauTech API detenida")
 
 
+class BodySizeLimitMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        if request.method in {"POST", "PUT", "PATCH"} and request.headers.get("content-length"):
+            try:
+                if int(request.headers["content-length"]) > 2_000_000:
+                    return JSONResponse(status_code=413, content={"detail": "Body demasiado grande"})
+            except ValueError:
+                pass
+        return await call_next(request)
+
+
 def create_app() -> FastAPI:
     app = FastAPI(
         title="RestauTech API",
@@ -28,6 +42,7 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
+    app.add_middleware(BodySizeLimitMiddleware)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins_list,
@@ -45,6 +60,10 @@ def create_app() -> FastAPI:
     @app.get("/health")
     async def health() -> dict[str, Any]:
         return {"status": "ok", "app": "RestauTech"}
+
+    @app.exception_handler(RequestValidationError)
+    async def validation_exception_handler(request: Request, exc: RequestValidationError):
+        return JSONResponse(status_code=422, content={"detail": "Datos inválidos", "errors": exc.errors()})
 
     return app
 
