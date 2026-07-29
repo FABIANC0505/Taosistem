@@ -1,10 +1,8 @@
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 from pydantic import BaseModel, Field
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.database import get_db
+import enum
+from app.core.database import get_db, fetch_one
 from app.core.security import verify_token
-from app.models.user import User, UserRole
 from app.services.history_settings import (
     get_history_retention_days,
     set_history_retention_days,
@@ -13,10 +11,17 @@ from app.services.history_settings import (
 router = APIRouter(prefix="/settings", tags=["settings"])
 
 
+class UserRole(str, enum.Enum):
+    ADMIN = "admin"
+    MESERO = "mesero"
+    COCINA = "cocina"
+    CAJERO = "cajero"
+
+
 async def get_current_user(
     authorization: str = Header(default=None),
-    db: AsyncSession = Depends(get_db),
-) -> User:
+    db=Depends(get_db),
+) -> dict:
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -32,9 +37,7 @@ async def get_current_user(
         )
 
     user_id = payload.get("sub")
-    stmt = select(User).where(User.id == user_id)
-    result = await db.execute(stmt)
-    user = result.scalar_one_or_none()
+    user = await fetch_one(db, "SELECT * FROM users WHERE id = ?", (user_id,))
 
     if not user:
         raise HTTPException(
@@ -42,7 +45,7 @@ async def get_current_user(
             detail="Usuario no encontrado",
         )
 
-    if not user.activo:
+    if not user.get("activo"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Usuario inactivo",
@@ -51,8 +54,8 @@ async def get_current_user(
     return user
 
 
-async def require_admin(current_user: User = Depends(get_current_user)) -> User:
-    if current_user.rol != UserRole.ADMIN:
+async def require_admin(current_user: dict = Depends(get_current_user)) -> dict:
+    if current_user.get("rol") != UserRole.ADMIN.value:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="No autorizado",
@@ -70,8 +73,8 @@ class UpdateHistoryRetentionRequest(BaseModel):
 
 @router.get("/history-retention", response_model=HistoryRetentionResponse)
 async def get_history_retention(
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_admin),
+    db=Depends(get_db),
+    current_user: dict = Depends(require_admin),
 ):
     retention_days = await get_history_retention_days(db)
     return HistoryRetentionResponse(retention_days=retention_days)
@@ -80,8 +83,8 @@ async def get_history_retention(
 @router.put("/history-retention", response_model=HistoryRetentionResponse)
 async def update_history_retention(
     payload: UpdateHistoryRetentionRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_admin),
+    db=Depends(get_db),
+    current_user: dict = Depends(require_admin),
 ):
     retention_days = await set_history_retention_days(db, payload.retention_days)
     return HistoryRetentionResponse(retention_days=retention_days)

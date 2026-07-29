@@ -1,73 +1,124 @@
 from collections import defaultdict
 from datetime import datetime, timedelta
-from sqlalchemy import delete, func, select
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.models.app_setting import AppSetting
-from app.models.orden import Order, OrderStatus
+import enum
+import json
+from app.core.database import fetch_all, fetch_one, execute
 
 
 ORDER_HISTORY_RETENTION_KEY = "order_history_retention_days"
 DEFAULT_RETENTION_DAYS = 90
 
 
-async def get_history_retention_days(db: AsyncSession) -> int:
-    stmt = select(AppSetting).where(AppSetting.key == ORDER_HISTORY_RETENTION_KEY)
-    result = await db.execute(stmt)
-    setting = result.scalar_one_or_none()
+class OrderStatus(str, enum.Enum):
+    PENDIENTE = "pendiente"
+    EN_PREPARACION = "en_preparacion"
+    LISTO = "listo"
+    ENTREGADO = "entregado"
+    CANCELADO = "cancelado"
+
+
+async def get_history_retention_days(db) -> int:
+    setting = await fetch_one(
+        db,
+        "SELECT value FROM app_settings WHERE key = ?",
+        (ORDER_HISTORY_RETENTION_KEY,),
+    )
 
     if not setting:
         return DEFAULT_RETENTION_DAYS
 
     try:
-        return max(1, int(setting.value))
+        return max(1, int(setting.get("value")))
     except (ValueError, TypeError):
         return DEFAULT_RETENTION_DAYS
 
 
-async def set_history_retention_days(db: AsyncSession, retention_days: int) -> int:
-    stmt = select(AppSetting).where(AppSetting.key == ORDER_HISTORY_RETENTION_KEY)
-    result = await db.execute(stmt)
-    setting = result.scalar_one_or_none()
-
-    if not setting:
-        setting = AppSetting(key=ORDER_HISTORY_RETENTION_KEY, value=str(retention_days))
-        db.add(setting)
+async def set_history_retention_days(db, retention_days: int) -> int:
+    existing = await fetch_one(
+        db,
+        "SELECT key FROM app_settings WHERE key = ?",
+        (ORDER_HISTORY_RETENTION_KEY,),
+    )
+    if existing:
+        await execute(
+            db,
+            "UPDATE app_settings SET value = ?, updated_at = CURRENT_TIMESTAMP WHERE key = ?",
+            (str(retention_days), ORDER_HISTORY_RETENTION_KEY),
+        )
     else:
-        setting.value = str(retention_days)
-
-    await db.commit()
+        await execute(
+            db,
+            "INSERT INTO app_settings (key, value) VALUES (?, ?)",
+            (ORDER_HISTORY_RETENTION_KEY, str(retention_days)),
+        )
     return retention_days
 
 
-async def cleanup_expired_dispatched_orders(db: AsyncSession, retention_days: int) -> int:
+async def cleanup_expired_dispatched_orders(db, retention_days: int) -> int:
     cutoff = datetime.utcnow() - timedelta(days=retention_days)
-    delivered_at_expr = func.coalesce(Order.entregado_at, Order.created_at)
-
-    stmt = delete(Order).where(
-        Order.status == OrderStatus.ENTREGADO,
-        delivered_at_expr < cutoff,
+    orders = await fetch_all(
+        db,
+        "SELECT id, created_at, entregado_at FROM orders WHERE status = ?",
+        (OrderStatus.ENTREGADO.value,),
     )
+    expired_ids = []
+    for order in orders:
+        delivered_at_value = order.get("entregado_at") or order.get("created_at")
+        if not delivered_at_value:
+            continue
+        if isinstance(delivered_at_value, str):
+            try:
+                delivered_at = datetime.fromisoformat(delivered_at_value.replace("Z", "+00:00"))
+            except ValueError:
+                continue
+        else:
+            delivered_at = delivered_at_value
+        if delivered_at < cutoff:
+            expired_ids.append(order["id"])
 
-    result = await db.execute(stmt)
-    await db.commit()
-    return result.rowcount or 0
+    deleted = 0
+    for order_id in expired_ids:
+        await execute(db, "DELETE FROM orders WHERE id = ?", (order_id,))
+        deleted += 1
+    return deleted
 
 
-async def get_dispatched_history(db: AsyncSession) -> dict:
+def _parse_json_items(items_value):
+    if items_value is None:
+        return []
+    if isinstance(items_value, list):
+        return items_value
+    if isinstance(items_value, str):
+        try:
+            parsed = json.loads(items_value)
+            return parsed if isinstance(parsed, list) else []
+        except json.JSONDecodeError:
+            return []
+    return []
+
+
+async def get_dispatched_history(db) -> dict:
     retention_days = await get_history_retention_days(db)
     await cleanup_expired_dispatched_orders(db, retention_days)
 
-    stmt = select(Order).where(Order.status == OrderStatus.ENTREGADO)
-    result = await db.execute(stmt)
-    orders = result.scalars().all()
+    orders = await fetch_all(
+        db,
+        "SELECT * FROM orders WHERE status = ?",
+        (OrderStatus.ENTREGADO.value,),
+    )
 
     per_day: dict[str, int] = defaultdict(int)
     per_month: dict[str, int] = defaultdict(int)
 
     for order in orders:
-        delivered_at = order.entregado_at or order.created_at
+        delivered_at = order.get("entregado_at") or order.get("created_at")
         if not delivered_at:
             continue
+        if isinstance(delivered_at, str):
+            try:
+                delivered_at = datetime.fromisoformat(delivered_at.replace("Z", "+00:00"))
+            except ValueError:
+                continue
         per_day[delivered_at.date().isoformat()] += 1
         per_month[delivered_at.strftime("%Y-%m")] += 1
 
@@ -84,21 +135,26 @@ async def get_dispatched_history(db: AsyncSession) -> dict:
     }
 
 
-async def get_orders_history(db: AsyncSession, limit: int = 100, mesero_id: str | None = None) -> dict:
+async def get_orders_history(db, limit: int = 100, mesero_id: str | None = None) -> dict:
     retention_days = await get_history_retention_days(db)
     await cleanup_expired_dispatched_orders(db, retention_days)
 
-    stmt = select(Order).where(
-        Order.status.in_([OrderStatus.ENTREGADO, OrderStatus.CANCELADO])
-    )
     if mesero_id:
-        stmt = stmt.where(Order.id_mesero == mesero_id)
+        orders = await fetch_all(
+            db,
+            "SELECT * FROM orders WHERE status IN (?, ?) AND id_mesero = ?",
+            (OrderStatus.ENTREGADO.value, OrderStatus.CANCELADO.value, mesero_id),
+        )
+    else:
+        orders = await fetch_all(
+            db,
+            "SELECT * FROM orders WHERE status IN (?, ?)",
+            (OrderStatus.ENTREGADO.value, OrderStatus.CANCELADO.value),
+        )
 
-    result = await db.execute(stmt)
-    orders = result.scalars().all()
     orders = sorted(
         orders,
-        key=lambda order: order.entregado_at or order.cancelado_at or order.created_at or datetime.min,
+        key=lambda order: order.get("entregado_at") or order.get("cancelado_at") or order.get("created_at") or datetime.min,
         reverse=True,
     )[:limit]
 
@@ -110,46 +166,79 @@ async def get_orders_history(db: AsyncSession, limit: int = 100, mesero_id: str 
     history_items = []
 
     for order in orders:
-        total_items = sum(int(item.get("cantidad", 0)) for item in (order.items or []))
+        items = _parse_json_items(order.get("items"))
+        total_items = sum(int(item.get("cantidad", 0)) for item in items)
         tiempo_hasta_preparacion = None
         tiempo_preparacion = None
         tiempo_total = None
 
-        if order.cocinando_at and order.created_at:
-            tiempo_hasta_preparacion = int((order.cocinando_at - order.created_at).total_seconds())
+        created_at = order.get("created_at")
+        cocinando_at = order.get("cocinando_at")
+        served_at = order.get("served_at")
+        entregado_at = order.get("entregado_at")
+        cancelado_at = order.get("cancelado_at")
 
-        if order.cocinando_at and order.served_at:
-            tiempo_preparacion = int((order.served_at - order.cocinando_at).total_seconds())
+        if isinstance(created_at, str):
+            try:
+                created_at = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+            except ValueError:
+                created_at = None
+        if isinstance(cocinando_at, str):
+            try:
+                cocinando_at = datetime.fromisoformat(cocinando_at.replace("Z", "+00:00"))
+            except ValueError:
+                cocinando_at = None
+        if isinstance(served_at, str):
+            try:
+                served_at = datetime.fromisoformat(served_at.replace("Z", "+00:00"))
+            except ValueError:
+                served_at = None
+        if isinstance(entregado_at, str):
+            try:
+                entregado_at = datetime.fromisoformat(entregado_at.replace("Z", "+00:00"))
+            except ValueError:
+                entregado_at = None
+        if isinstance(cancelado_at, str):
+            try:
+                cancelado_at = datetime.fromisoformat(cancelado_at.replace("Z", "+00:00"))
+            except ValueError:
+                cancelado_at = None
+
+        if cocinando_at and created_at:
+            tiempo_hasta_preparacion = int((cocinando_at - created_at).total_seconds())
+
+        if cocinando_at and served_at:
+            tiempo_preparacion = int((served_at - cocinando_at).total_seconds())
             prep_durations.append(tiempo_preparacion)
 
-        if order.created_at and order.entregado_at:
-            tiempo_total = int((order.entregado_at - order.created_at).total_seconds())
+        if created_at and entregado_at:
+            tiempo_total = int((entregado_at - created_at).total_seconds())
             total_durations.append(tiempo_total)
 
         if (
-            order.tipo_pedido == "domicilio"
-            and order.created_at
-            and order.created_at >= start_of_week
-            and order.status == OrderStatus.ENTREGADO
+            order.get("tipo_pedido") == "domicilio"
+            and created_at
+            and created_at >= start_of_week
+            and order.get("status") == OrderStatus.ENTREGADO.value
         ):
             deliveries_this_week += 1
 
         history_items.append(
             {
-                "id": order.id,
-                "tipo_pedido": order.tipo_pedido,
-                "mesa_numero": order.mesa_numero,
-                "cliente_nombre": order.cliente_nombre,
-                "cliente_telefono": order.cliente_telefono,
-                "direccion_entrega": order.direccion_entrega,
-                "status": order.status,
-                "total_amount": float(order.total_amount),
-                "created_at": order.created_at,
-                "cocinando_at": order.cocinando_at,
-                "served_at": order.served_at,
-                "entregado_at": order.entregado_at,
-                "cancelado_at": order.cancelado_at,
-                "notas": order.notas,
+                "id": order.get("id"),
+                "tipo_pedido": order.get("tipo_pedido"),
+                "mesa_numero": order.get("mesa_numero"),
+                "cliente_nombre": order.get("cliente_nombre"),
+                "cliente_telefono": order.get("cliente_telefono"),
+                "direccion_entrega": order.get("direccion_entrega"),
+                "status": order.get("status"),
+                "total_amount": float(order.get("total_amount") or 0),
+                "created_at": created_at,
+                "cocinando_at": cocinando_at,
+                "served_at": served_at,
+                "entregado_at": entregado_at,
+                "cancelado_at": cancelado_at,
+                "notas": order.get("notas"),
                 "total_items": total_items,
                 "tiempo_hasta_preparacion_segundos": tiempo_hasta_preparacion,
                 "tiempo_preparacion_segundos": tiempo_preparacion,

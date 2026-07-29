@@ -1,21 +1,11 @@
-# Importar todos los modelos para que Alembic los detecte automáticamente
-from app.models.user import User, UserRole
-from app.models.producto import Product
-from app.models.orden import Order, OrderStatus
-from app.models.app_setting import AppSetting
-from app.models.cashier import CashSession, CashMovement, CashMovementType, CashPayment, PaymentMethod, WaiterAlert
+"""
+app.models package
 
-__all__ = [
-    "User",
-    "UserRole",
-    "Product",
-    "Order",
-    "OrderStatus",
-    "AppSetting",
-    "CashSession",
-    "CashMovement",
-    "CashMovementType",
-    "CashPayment",
-    "PaymentMethod",
-    "WaiterAlert",
-]
+NOTE: During migration away from SQLAlchemy we avoid importing model modules
+at package import time so development tools (fastapi dev, uvicorn) can import
+the application without executing SQLAlchemy declarative class creation.
+
+Import model modules only where strictly necessary.
+"""
+
+__all__ = []

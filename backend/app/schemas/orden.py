@@ -1,7 +1,15 @@
 from datetime import datetime
+import enum
 from typing import Optional
 from pydantic import BaseModel, Field, model_validator
-from app.models.orden import OrderStatus
+
+
+class OrderStatus(str, enum.Enum):
+    PENDIENTE = "pendiente"
+    EN_PREPARACION = "en_preparacion"
+    LISTO = "listo"
+    ENTREGADO = "entregado"
+    CANCELADO = "cancelado"
 
 
 class TipoPedido:

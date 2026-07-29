@@ -1,11 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from app.core.database import get_db
-from app.models.producto import Product
+from app.core.database import get_db, fetch_all, fetch_one, execute
 from app.services.storage import StorageError, upload_product_image
 from pydantic import BaseModel
 from typing import List, Optional
+from uuid import uuid4
 
 router = APIRouter(prefix="/products", tags=["products"])
 
@@ -29,51 +27,44 @@ class ProductResponse(ProductBase):
         from_attributes = True
 
 @router.get("", response_model=List[ProductResponse])
-async def get_products(db: AsyncSession = Depends(get_db)):
+async def get_products(db=Depends(get_db)):
     """Obtener todos los productos"""
-    stmt = select(Product).order_by(Product.created_at.desc())
-    result = await db.execute(stmt)
-    products = result.scalars().all()
-    
+    rows = await fetch_all(db, "SELECT * FROM products ORDER BY created_at DESC")
     return [
         ProductResponse(
-            id=p.id,
-            nombre=p.nombre,
-            precio=float(p.precio),
-            descripcion=p.descripcion,
-            categoria=p.categoria,
-            disponible=p.disponible,
-            imagen_url=p.imagen_url,
-            agotado_por=p.agotado_por,
-            agotado_at=p.agotado_at.isoformat() if p.agotado_at else None,
-            created_at=p.created_at.isoformat() if p.created_at else None,
-            updated_at=p.updated_at.isoformat() if p.updated_at else None,
+            id=r["id"],
+            nombre=r["nombre"],
+            precio=float(r["precio"]),
+            descripcion=r.get("descripcion"),
+            categoria=r["categoria"],
+            disponible=bool(r["disponible"]),
+            imagen_url=r.get("imagen_url"),
+            agotado_por=r.get("agotado_por"),
+            agotado_at=r.get("agotado_at"),
+            created_at=r.get("created_at"),
+            updated_at=r.get("updated_at"),
         )
-        for p in products
+        for r in rows
     ]
 
 @router.get("/{product_id}", response_model=ProductResponse)
-async def get_product(product_id: str, db: AsyncSession = Depends(get_db)):
+async def get_product(product_id: str, db=Depends(get_db)):
     """Obtener producto por ID"""
-    stmt = select(Product).where(Product.id == product_id)
-    result = await db.execute(stmt)
-    product = result.scalar_one_or_none()
-    
+    product = await fetch_one(db, "SELECT * FROM products WHERE id = ?", (product_id,))
     if not product:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
-    
     return ProductResponse(
-        id=product.id,
-        nombre=product.nombre,
-        precio=float(product.precio),
-        descripcion=product.descripcion,
-        categoria=product.categoria,
-        disponible=product.disponible,
-        imagen_url=product.imagen_url,
-        agotado_por=product.agotado_por,
-        agotado_at=product.agotado_at.isoformat() if product.agotado_at else None,
-        created_at=product.created_at.isoformat() if product.created_at else None,
-        updated_at=product.updated_at.isoformat() if product.updated_at else None,
+        id=product["id"],
+        nombre=product["nombre"],
+        precio=float(product["precio"]),
+        descripcion=product.get("descripcion"),
+        categoria=product["categoria"],
+        disponible=bool(product["disponible"]),
+        imagen_url=product.get("imagen_url"),
+        agotado_por=product.get("agotado_por"),
+        agotado_at=product.get("agotado_at"),
+        created_at=product.get("created_at"),
+        updated_at=product.get("updated_at"),
     )
 
 @router.post("", response_model=ProductResponse)
@@ -83,7 +74,7 @@ async def create_product(
     categoria: str = Form(...),
     descripcion: Optional[str] = Form(None),
     imagen: Optional[UploadFile] = File(None),
-    db: AsyncSession = Depends(get_db)
+    db=Depends(get_db)
 ):
     """Crear nuevo producto"""
     
@@ -94,31 +85,28 @@ async def create_product(
         except StorageError as exc:
             raise HTTPException(status_code=500, detail=f"Error subiendo imagen: {exc}") from exc
     
-    new_product = Product(
-        nombre=nombre,
-        precio=precio,
-        descripcion=descripcion,
-        categoria=categoria,
-        disponible=True,
-        imagen_url=imagen_url
+    product_id = str(uuid4())
+    await execute(
+        db,
+        """
+        INSERT INTO products (id, nombre, precio, descripcion, imagen_url, categoria, disponible)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        """,
+        (product_id, nombre, precio, descripcion, imagen_url, categoria, 1),
     )
-    
-    db.add(new_product)
-    await db.commit()
-    await db.refresh(new_product)
-    
+    product = await fetch_one(db, "SELECT * FROM products WHERE id = ?", (product_id,))
     return ProductResponse(
-        id=new_product.id,
-        nombre=new_product.nombre,
-        precio=float(new_product.precio),
-        descripcion=new_product.descripcion,
-        categoria=new_product.categoria,
-        disponible=new_product.disponible,
-        imagen_url=new_product.imagen_url,
-        agotado_por=new_product.agotado_por,
-        agotado_at=new_product.agotado_at.isoformat() if new_product.agotado_at else None,
-        created_at=new_product.created_at.isoformat() if new_product.created_at else None,
-        updated_at=new_product.updated_at.isoformat() if new_product.updated_at else None,
+        id=product["id"],
+        nombre=product["nombre"],
+        precio=float(product["precio"]),
+        descripcion=product.get("descripcion"),
+        categoria=product["categoria"],
+        disponible=bool(product["disponible"]),
+        imagen_url=product.get("imagen_url"),
+        agotado_por=product.get("agotado_por"),
+        agotado_at=product.get("agotado_at"),
+        created_at=product.get("created_at"),
+        updated_at=product.get("updated_at"),
     )
 
 @router.put("/{product_id}", response_model=ProductResponse)
@@ -130,115 +118,109 @@ async def update_product(
     descripcion: Optional[str] = Form(None),
     disponible: Optional[bool] = Form(None),
     imagen: Optional[UploadFile] = File(None),
-    db: AsyncSession = Depends(get_db)
+    db=Depends(get_db)
 ):
     """Actualizar producto"""
     
-    stmt = select(Product).where(Product.id == product_id)
-    result = await db.execute(stmt)
-    product = result.scalar_one_or_none()
-    
+    product = await fetch_one(db, "SELECT * FROM products WHERE id = ?", (product_id,))
     if not product:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
-    
-    if nombre:
-        product.nombre = nombre
-    if precio is not None:
-        product.precio = precio
-    if descripcion is not None:
-        product.descripcion = descripcion
-    if categoria:
-        product.categoria = categoria
-    if disponible is not None:
-        product.disponible = disponible
+
+    # handle image upload
     if imagen:
         try:
-            product.imagen_url = await upload_product_image(imagen)
+            imagen_url = await upload_product_image(imagen)
         except StorageError as exc:
             raise HTTPException(status_code=500, detail=f"Error subiendo imagen: {exc}") from exc
-    
-    await db.commit()
-    await db.refresh(product)
-    
+        await execute(db, "UPDATE products SET imagen_url = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", (imagen_url, product_id))
+
+    # build dynamic update
+    updates = []
+    params = []
+    if nombre:
+        updates.append("nombre = ?")
+        params.append(nombre)
+    if precio is not None:
+        updates.append("precio = ?")
+        params.append(precio)
+    if descripcion is not None:
+        updates.append("descripcion = ?")
+        params.append(descripcion)
+    if categoria:
+        updates.append("categoria = ?")
+        params.append(categoria)
+    if disponible is not None:
+        updates.append("disponible = ?")
+        params.append(1 if disponible else 0)
+
+    if updates:
+        sql = f"UPDATE products SET {', '.join(updates)}, updated_at = CURRENT_TIMESTAMP WHERE id = ?"
+        params.append(product_id)
+        await execute(db, sql, tuple(params))
+
+    product = await fetch_one(db, "SELECT * FROM products WHERE id = ?", (product_id,))
     return ProductResponse(
-        id=product.id,
-        nombre=product.nombre,
-        precio=float(product.precio),
-        descripcion=product.descripcion,
-        categoria=product.categoria,
-        disponible=product.disponible,
-        imagen_url=product.imagen_url,
-        agotado_por=product.agotado_por,
-        agotado_at=product.agotado_at.isoformat() if product.agotado_at else None,
-        created_at=product.created_at.isoformat() if product.created_at else None,
-        updated_at=product.updated_at.isoformat() if product.updated_at else None,
+        id=product["id"],
+        nombre=product["nombre"],
+        precio=float(product["precio"]),
+        descripcion=product.get("descripcion"),
+        categoria=product["categoria"],
+        disponible=bool(product["disponible"]),
+        imagen_url=product.get("imagen_url"),
+        agotado_por=product.get("agotado_por"),
+        agotado_at=product.get("agotado_at"),
+        created_at=product.get("created_at"),
+        updated_at=product.get("updated_at"),
     )
 
 @router.delete("/{product_id}")
-async def delete_product(product_id: str, db: AsyncSession = Depends(get_db)):
+async def delete_product(product_id: str, db=Depends(get_db)):
     """Eliminar producto"""
-    
-    stmt = select(Product).where(Product.id == product_id)
-    result = await db.execute(stmt)
-    product = result.scalar_one_or_none()
-    
+    product = await fetch_one(db, "SELECT id FROM products WHERE id = ?", (product_id,))
     if not product:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
-    
-    await db.delete(product)
-    await db.commit()
-    
+    await execute(db, "DELETE FROM products WHERE id = ?", (product_id,))
     return {"detail": "Producto eliminado"}
 
 @router.put("/{product_id}/mark-out-of-stock")
-async def mark_out_of_stock(product_id: str, db: AsyncSession = Depends(get_db)):
+async def mark_out_of_stock(product_id: str, db=Depends(get_db)):
     """Marcar producto como agotado"""
-    
-    stmt = select(Product).where(Product.id == product_id)
-    result = await db.execute(stmt)
-    product = result.scalar_one_or_none()
-    
+    product = await fetch_one(db, "SELECT * FROM products WHERE id = ?", (product_id,))
     if not product:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
-    
-    product.disponible = False
-    await db.commit()
-    await db.refresh(product)
-    
+    await execute(db, "UPDATE products SET disponible = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?", (product_id,))
+    product = await fetch_one(db, "SELECT * FROM products WHERE id = ?", (product_id,))
     return ProductResponse(
-        id=product.id,
-        nombre=product.nombre,
-        precio=float(product.precio),
-        descripcion=product.descripcion,
-        categoria=product.categoria,
-        disponible=product.disponible,
-        imagen_url=product.imagen_url,
-        agotado_por=product.agotado_por,
-        agotado_at=product.agotado_at.isoformat() if product.agotado_at else None,
-        created_at=product.created_at.isoformat() if product.created_at else None,
-        updated_at=product.updated_at.isoformat() if product.updated_at else None,
+        id=product["id"],
+        nombre=product["nombre"],
+        precio=float(product["precio"]),
+        descripcion=product.get("descripcion"),
+        categoria=product["categoria"],
+        disponible=bool(product["disponible"]),
+        imagen_url=product.get("imagen_url"),
+        agotado_por=product.get("agotado_por"),
+        agotado_at=product.get("agotado_at"),
+        created_at=product.get("created_at"),
+        updated_at=product.get("updated_at"),
     )
 
 @router.get("/category/{categoria}")
-async def get_products_by_category(categoria: str, db: AsyncSession = Depends(get_db)):
+async def get_products_by_category(categoria: str, db=Depends(get_db)):
     """Obtener productos por categoría"""
-    stmt = select(Product).where(Product.categoria == categoria)
-    result = await db.execute(stmt)
-    products = result.scalars().all()
-    
+    rows = await fetch_all(db, "SELECT * FROM products WHERE categoria = ? ORDER BY created_at DESC", (categoria,))
     return [
         ProductResponse(
-            id=p.id,
-            nombre=p.nombre,
-            precio=float(p.precio),
-            descripcion=p.descripcion,
-            categoria=p.categoria,
-            disponible=p.disponible,
-            imagen_url=p.imagen_url,
-            agotado_por=p.agotado_por,
-            agotado_at=p.agotado_at.isoformat() if p.agotado_at else None,
-            created_at=p.created_at.isoformat() if p.created_at else None,
-            updated_at=p.updated_at.isoformat() if p.updated_at else None,
+            id=r["id"],
+            nombre=r["nombre"],
+            precio=float(r["precio"]),
+            descripcion=r.get("descripcion"),
+            categoria=r["categoria"],
+            disponible=bool(r["disponible"]),
+            imagen_url=r.get("imagen_url"),
+            agotado_por=r.get("agotado_por"),
+            agotado_at=r.get("agotado_at"),
+            created_at=r.get("created_at"),
+            updated_at=r.get("updated_at"),
         )
-        for p in products
+        for r in rows
     ]

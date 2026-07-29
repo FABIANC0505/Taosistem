@@ -58,6 +58,13 @@ R2_BUCKET_NAME=restautech-products
 R2_PUBLIC_BASE_URL=https://pub-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.r2.dev
 ```
 
+Checklist para desplegar en Vercel:
+
+- `DATABASE_URL` = `mysql://USER:PASS@HOST:PORT/DATABASE` (o `mysql+aiomysql://...`)
+- `STORAGE_BACKEND` = `r2`
+- `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, `R2_PUBLIC_BASE_URL`
+
+
 Si no usas R2, deja `STORAGE_BACKEND=local` (valor por defecto) para guardar en disco local.
 
 Uso de SQLite en desarrollo
