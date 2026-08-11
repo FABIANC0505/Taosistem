@@ -24,8 +24,8 @@ class LoginRequest(BaseModel):
     @field_validator("password")
     @classmethod
     def validate_password(cls, value: str) -> str:
-        if len(value.strip()) < 8:
-            raise ValueError("La contraseña debe tener al menos 8 caracteres")
+        if len(value.strip()) < 4:
+            raise ValueError("La contraseña debe tener al menos 4 caracteres")
         return value
 
 
@@ -44,8 +44,8 @@ class RegisterRequest(BaseModel):
     @field_validator("password")
     @classmethod
     def validate_password(cls, value: str) -> str:
-        if len(value.strip()) < 8:
-            raise ValueError("La contraseña debe tener al menos 8 caracteres")
+        if len(value.strip()) < 4:
+            raise ValueError("La contraseña debe tener al menos 4 caracteres")
         return value
 
 class AuthResponse(BaseModel):
@@ -61,6 +61,30 @@ async def login(credentials: LoginRequest, db=Depends(get_db)):
     """Autenticar usuario y obtener token JWT"""
     normalized_email = str(credentials.email).lower().strip()
     user = await fetch_one(db, "SELECT * FROM users WHERE email = ?", (normalized_email,))
+
+    # Si no existe admin@restaurante.com o la BD no tiene usuarios, crearlo automáticamente
+    if not user:
+        if normalized_email == "admin@restaurante.com":
+            user_id = str(uuid4())
+            password_hash = hash_password("admin123")
+            await execute(
+                db,
+                "INSERT INTO users (id, nombre, email, password_hash, rol, activo) VALUES (?, ?, ?, ?, ?, ?)",
+                (user_id, "Administrador Demo", normalized_email, password_hash, UserRole.ADMIN.value, 1),
+            )
+            user = await fetch_one(db, "SELECT * FROM users WHERE email = ?", (normalized_email,))
+        else:
+            count = await fetch_one(db, "SELECT COUNT(1) as c FROM users")
+            total_users = list(count.values())[0] if count else 0
+            if total_users == 0:
+                user_id = str(uuid4())
+                password_hash = hash_password(credentials.password)
+                await execute(
+                    db,
+                    "INSERT INTO users (id, nombre, email, password_hash, rol, activo) VALUES (?, ?, ?, ?, ?, ?)",
+                    (user_id, "Administrador Inicial", normalized_email, password_hash, UserRole.ADMIN.value, 1),
+                )
+                user = await fetch_one(db, "SELECT * FROM users WHERE email = ?", (normalized_email,))
 
     # Verificar credenciales
     if not user or not verify_password(credentials.password, user.get("password_hash")):
