@@ -70,22 +70,48 @@ def _bind_qmark_params(query: str, params: tuple | list | None) -> tuple[str, di
 
 async def execute(db: AsyncSession, query: str, params: tuple | list | None = None):
     prepared_query, prepared_params = _bind_qmark_params(query, params)
-    result = await db.execute(text(prepared_query), prepared_params)
-    await db.commit()
-    return result
+    try:
+        result = await db.execute(text(prepared_query), prepared_params)
+        await db.commit()
+        return result
+    except Exception as exc:
+        err_str = str(exc).lower()
+        if "doesn't exist" in err_str or "no such table" in err_str or "1146" in err_str:
+            await init_db()
+            result = await db.execute(text(prepared_query), prepared_params)
+            await db.commit()
+            return result
+        raise exc
 
 
 async def fetch_all(db: AsyncSession, query: str, params: tuple | list | None = None):
     prepared_query, prepared_params = _bind_qmark_params(query, params)
-    result = await db.execute(text(prepared_query), prepared_params)
-    return [dict(row) for row in result.mappings().all()]
+    try:
+        result = await db.execute(text(prepared_query), prepared_params)
+        return [dict(row) for row in result.mappings().all()]
+    except Exception as exc:
+        err_str = str(exc).lower()
+        if "doesn't exist" in err_str or "no such table" in err_str or "1146" in err_str:
+            await init_db()
+            result = await db.execute(text(prepared_query), prepared_params)
+            return [dict(row) for row in result.mappings().all()]
+        raise exc
 
 
 async def fetch_one(db: AsyncSession, query: str, params: tuple | list | None = None):
     prepared_query, prepared_params = _bind_qmark_params(query, params)
-    result = await db.execute(text(prepared_query), prepared_params)
-    row = result.mappings().first()
-    return dict(row) if row else None
+    try:
+        result = await db.execute(text(prepared_query), prepared_params)
+        row = result.mappings().first()
+        return dict(row) if row else None
+    except Exception as exc:
+        err_str = str(exc).lower()
+        if "doesn't exist" in err_str or "no such table" in err_str or "1146" in err_str:
+            await init_db()
+            result = await db.execute(text(prepared_query), prepared_params)
+            row = result.mappings().first()
+            return dict(row) if row else None
+        raise exc
 
 
 async def init_db():
