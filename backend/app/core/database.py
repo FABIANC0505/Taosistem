@@ -22,16 +22,23 @@ def _prepare_engine_config(database_url: str) -> tuple[str, dict[str, Any]]:
 
     url = make_url(database_url)
     query = dict(url.query)
-    ssl_requested = False
+    ssl_mode = None
 
     for key in ("ssl-mode", "ssl_mode", "ssl"):
         value = query.pop(key, None)
-        if value and str(value).lower() not in {"disabled", "disable", "false", "0"}:
-            ssl_requested = True
+        if value:
+            ssl_mode = str(value).lower()
+            break
 
     engine_kwargs["pool_pre_ping"] = True
-    if ssl_requested or (url.host and url.host.endswith(".aivencloud.com")):
-        engine_kwargs["connect_args"] = {"ssl": ssl.create_default_context()}
+    if ssl_mode not in {None, "disabled", "disable", "false", "0"} or (
+        url.host and url.host.endswith(".aivencloud.com")
+    ):
+        ssl_context = ssl.create_default_context()
+        if ssl_mode in {None, "required", "preferred", "true", "1"}:
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_NONE
+        engine_kwargs["connect_args"] = {"ssl": ssl_context}
 
     normalized_url = url.set(query=query)
     return normalized_url.render_as_string(hide_password=False), engine_kwargs
