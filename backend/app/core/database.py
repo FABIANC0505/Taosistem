@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from sqlalchemy.engine import make_url
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
@@ -11,11 +12,31 @@ from app.core.config import settings
 
 
 Base = declarative_base()
-DATABASE_URL = settings.get_database_url()
 
-engine_kwargs: dict[str, Any] = {}
-if DATABASE_URL.startswith("mysql"):
+
+def _prepare_engine_config(database_url: str) -> tuple[str, dict[str, Any]]:
+    engine_kwargs: dict[str, Any] = {}
+    if not database_url.startswith("mysql"):
+        return database_url, engine_kwargs
+
+    url = make_url(database_url)
+    query = dict(url.query)
+    ssl_requested = False
+
+    for key in ("ssl-mode", "ssl_mode", "ssl"):
+        value = query.pop(key, None)
+        if value and str(value).lower() not in {"disabled", "disable", "false", "0"}:
+            ssl_requested = True
+
     engine_kwargs["pool_pre_ping"] = True
+    if ssl_requested or (url.host and url.host.endswith(".aivencloud.com")):
+        engine_kwargs["connect_args"] = {"ssl": True}
+
+    normalized_url = url.set(query=query)
+    return normalized_url.render_as_string(hide_password=False), engine_kwargs
+
+
+DATABASE_URL, engine_kwargs = _prepare_engine_config(settings.get_database_url())
 
 engine = create_async_engine(DATABASE_URL, **engine_kwargs)
 session_factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
