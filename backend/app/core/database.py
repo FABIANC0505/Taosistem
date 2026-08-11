@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ssl
 from pathlib import Path
 from typing import Any
 
@@ -30,7 +31,7 @@ def _prepare_engine_config(database_url: str) -> tuple[str, dict[str, Any]]:
 
     engine_kwargs["pool_pre_ping"] = True
     if ssl_requested or (url.host and url.host.endswith(".aivencloud.com")):
-        engine_kwargs["connect_args"] = {"ssl": True}
+        engine_kwargs["connect_args"] = {"ssl": ssl.create_default_context()}
 
     normalized_url = url.set(query=query)
     return normalized_url.render_as_string(hide_password=False), engine_kwargs
