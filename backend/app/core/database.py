@@ -102,6 +102,26 @@ async def init_db():
     async with engine.begin() as connection:
         await connection.run_sync(Base.metadata.create_all)
 
+    # Crear usuario administrador inicial si la tabla de usuarios está vacía
+    async with session_factory() as session:
+        try:
+            user_count = await fetch_one(session, "SELECT COUNT(1) as c FROM users")
+            if not user_count or user_count.get("c", 0) == 0:
+                from uuid import uuid4
+                from app.core.security import hash_password
+
+                admin_id = str(uuid4())
+                admin_hash = hash_password("admin123")
+                await execute(
+                    session,
+                    "INSERT INTO users (id, nombre, email, password_hash, rol, activo) VALUES (?, ?, ?, ?, ?, ?)",
+                    (admin_id, "Administrador Demo", "admin@restaurante.com", admin_hash, "admin", 1),
+                )
+                print("Usuario admin inicial creado exitosamente en la base de datos.")
+        except Exception as exc:
+            print(f"Aviso al verificar/sembrar usuario inicial: {exc}")
+
+
 
 async def close_db():
     await engine.dispose()
