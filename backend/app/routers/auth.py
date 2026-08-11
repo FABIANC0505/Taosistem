@@ -116,7 +116,16 @@ async def login(credentials: LoginRequest, db=Depends(get_db)):
 
 @router.post("/register", response_model=AuthResponse)
 async def register(data: RegisterRequest, db=Depends(get_db)):
-    """Registrar nuevo usuario (solo para primeros registros o admin)"""
+    """Registrar nuevo usuario (solo para el primer usuario administrador inicial)"""
+    count = await fetch_one(db, "SELECT COUNT(1) as c FROM users")
+    total_users = list(count.values())[0] if count else 0
+
+    if total_users > 0:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="El registro público está deshabilitado por seguridad. Solo el Administrador puede crear usuarios desde el panel de administración."
+        )
+
     # Verificar si ya existe
     normalized_email = str(data.email).lower().strip()
     existing = await fetch_one(db, "SELECT id FROM users WHERE email = ?", (normalized_email,))
@@ -126,23 +135,16 @@ async def register(data: RegisterRequest, db=Depends(get_db)):
             detail="Email ya registrado"
         )
 
-    # Crear usuario como ADMIN si es el primero
-    count = await fetch_one(db, "SELECT COUNT(1) as c FROM users")
-    existing_users = count.get("c", 0) if count else 0
-    rol = UserRole.ADMIN.value if existing_users == 0 else UserRole.MESERO.value
-
     user_id = str(uuid4())
     password_hash = hash_password(data.password)
 
     await execute(
         db,
         "INSERT INTO users (id, nombre, email, password_hash, rol, activo) VALUES (?, ?, ?, ?, ?, ?)",
-        (user_id, data.nombre.strip(), normalized_email, password_hash, rol, 1),
+        (user_id, data.nombre.strip(), normalized_email, password_hash, UserRole.ADMIN.value, 1),
     )
 
     user = await fetch_one(db, "SELECT * FROM users WHERE id = ?", (user_id,))
-
-    # Crear token
     access_token = create_access_token({"sub": user.get("id"), "email": user.get("email")})
 
     return AuthResponse(
