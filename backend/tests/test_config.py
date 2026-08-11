@@ -32,3 +32,15 @@ def test_production_without_external_mysql_fails_fast():
 
     with pytest.raises(ValueError, match="base MySQL externa"):
         settings.get_database_url()
+
+
+def test_production_database_url_rejects_placeholder_host():
+    settings = Settings(
+        _env_file=None,
+        APP_ENV="production",
+        DATABASE_URL="mysql+aiomysql://user:password@HOST_MYSQL:3306/taosistem",
+        JWT_SECRET_KEY="test-secret",
+    )
+
+    with pytest.raises(ValueError, match="host real de MySQL"):
+        settings.get_database_url()

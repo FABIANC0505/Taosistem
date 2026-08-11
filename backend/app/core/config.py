@@ -1,4 +1,5 @@
 import os
+from urllib.parse import urlparse
 from typing import ClassVar
 
 from pydantic_settings import BaseSettings
@@ -67,6 +68,13 @@ class Settings(BaseSettings):
             raise ValueError("La configuracion actual del proyecto espera MySQL 8, no PostgreSQL.")
         if db_url.startswith("postgresql://"):
             raise ValueError("La configuracion actual del proyecto espera MySQL 8, no PostgreSQL.")
+        parsed_db_url = urlparse(db_url)
+        if self.APP_ENV != "development" and parsed_db_url.hostname:
+            placeholder_hosts = {"host", "host_mysql", "mysql_host", "localhost", "127.0.0.1"}
+            if parsed_db_url.hostname.lower() in placeholder_hosts:
+                raise ValueError(
+                    "DATABASE_URL debe usar el host real de MySQL en produccion, no un placeholder."
+                )
         return db_url
 
     @property
