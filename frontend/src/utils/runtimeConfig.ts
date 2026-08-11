@@ -19,7 +19,7 @@ export const getApiBaseUrl = () => {
     return 'http://localhost:8000';
   }
 
-  return '';
+  return 'https://taosistem.onrender.com';
 };
 
 export const isApiBaseUrlConfigured = () => getApiBaseUrl().length > 0;
