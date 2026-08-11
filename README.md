@@ -1,34 +1,34 @@
 # RestauTech
 
-Sistema local para la operación de un restaurante, con panel administrativo y módulos para meseros, cocina y caja.
+Sistema local para la operacion de un restaurante, con panel administrativo y modulos para meseros, cocina y caja.
 
 ## Stack actual
 
 - `frontend/`: React 19, TypeScript, Vite, React Router, Tailwind CSS y Recharts.
-- `backend/`: FastAPI, Uvicorn, Pydantic y autenticación JWT.
+- `backend/`: FastAPI, Uvicorn, Pydantic y autenticacion JWT.
 - Persistencia local: SQLite mediante `aiosqlite`.
-- Persistencia de producción: configuración compatible con MySQL mediante `DATABASE_URL`.
-- Imágenes: almacenamiento local o Cloudflare R2.
+- Persistencia de produccion: configuracion compatible con MySQL mediante `DATABASE_URL`.
+- Imagenes: almacenamiento local o Cloudflare R2.
 
 ## Funcionalidades
 
-- Inicio de sesión y control de acceso por rol.
+- Inicio de sesion y control de acceso por rol.
 - Panel administrativo.
-- Gestión de usuarios y productos.
-- Descuentos y configuración del restaurante.
+- Gestion de usuarios y productos.
+- Descuentos y configuracion del restaurante.
 - Historial de pedidos.
-- Módulos para mesero, cocina y cajero.
+- Modulos para mesero, cocina y cajero.
 - API documentada con Swagger.
 
 ## Requisitos
 
-- Python 3.11 o superior.
+- Python 3.12.
 - Node.js 18 o superior.
 - PowerShell en Windows para usar `start-dev.ps1`.
 
-No se necesita MySQL para la validación local si se utiliza SQLite.
+No se necesita MySQL para la validacion local si se utiliza SQLite.
 
-## Configuración local
+## Configuracion local
 
 ### Backend
 
@@ -55,11 +55,11 @@ VITE_API_URL=http://localhost:8000
 VITE_APP_NAME=RestauTech
 ```
 
-Usa `localhost` durante las pruebas. La configuración CORS actual contempla `http://localhost:3000`; abrir el frontend con `127.0.0.1:3000` puede provocar errores de red en las llamadas a la API.
+Usa `localhost` durante las pruebas. La configuracion CORS actual contempla `http://localhost:3000`; abrir el frontend con `127.0.0.1:3000` puede provocar errores de red en las llamadas a la API.
 
 ## Ejecutar en local
 
-Desde la raíz del proyecto:
+Desde la raiz del proyecto:
 
 ```powershell
 .\start-dev.ps1
@@ -69,7 +69,7 @@ El script crea el entorno virtual del backend si no existe, instala dependencias
 
 URLs locales:
 
-- Aplicación: <http://localhost:3000>
+- Aplicacion: <http://localhost:3000>
 - API: <http://localhost:8000>
 - Health check: <http://localhost:8000/health>
 - Swagger: <http://localhost:8000/docs>
@@ -87,7 +87,7 @@ npm install
 npm run dev
 ```
 
-## Validación
+## Validacion
 
 Compilar el frontend:
 
@@ -111,23 +111,30 @@ La respuesta esperada es `200 OK` con un JSON similar a:
 ## Estado conocido
 
 - El frontend compila correctamente con `npm run build`.
-- El login y la navegación por roles funcionan en local.
-- Productos, descuentos y configuración cargan en el panel administrativo.
-- Algunas vistas que consultan métricas, usuarios o historial todavía reportan errores cuando se ejecutan con SQLite porque conservan consultas basadas en SQLAlchemy mientras el adaptador local usa `aiosqlite`. Estas rutas requieren una unificación del acceso a datos antes de considerarse listas para producción.
+- El login y la navegacion por roles funcionan en local.
+- Productos, descuentos y configuracion cargan en el panel administrativo.
+- Las rutas principales del backend comparten el acceso a datos por SQLAlchemy async.
 
-## Producción
+## Produccion
 
-El repositorio está preparado como monorepo para desplegar cada aplicación por separado:
+El repositorio esta preparado como monorepo para desplegar cada aplicacion por separado:
 
-- Railway: configura `backend/` como Root Directory. Usa `backend/railway.json`, el comando `uvicorn main:app --host 0.0.0.0 --port $PORT` y el health check `/health`.
+- Render: configura `backend/` como Root Directory. Usa `pip install -r requirements.txt` como Build Command y `uvicorn main:app --host 0.0.0.0 --port $PORT` como Start Command. El health check es `/health`.
 - Vercel: configura `frontend/` como Root Directory, `npm run build` como Build Command y `dist` como Output Directory. `frontend/vercel.json` mantiene funcionando las rutas de React Router.
-- En Vercel define `VITE_API_URL` con la URL pública de Railway.
-- En Railway define `CORS_ORIGINS` con la URL pública de Vercel y usa MySQL como base de datos.
+- En Vercel define `VITE_API_URL` con la URL publica de Render, por ejemplo `https://taosistem.onrender.com`.
+- En Render define `CORS_ORIGINS` con la URL publica de Vercel y usa MySQL como base de datos externa.
 
 Para un despliegue con MySQL y Cloudflare R2, configura las variables de entorno del proveedor:
 
 ```env
-DATABASE_URL=mysql://USER:PASSWORD@HOST:PORT/DATABASE
+APP_ENV=production
+DATABASE_URL=mysql+aiomysql://USER:PASSWORD@HOST:3306/DATABASE
+JWT_SECRET_KEY=generate-a-long-random-secret
+JWT_ALGORITHM=HS256
+JWT_ACCESS_EXPIRE_MINUTES=480
+JWT_REFRESH_EXPIRE_DAYS=30
+FRONTEND_URL=https://your-frontend.vercel.app
+CORS_ORIGINS=https://your-frontend.vercel.app
 STORAGE_BACKEND=r2
 R2_ACCOUNT_ID=...
 R2_ACCESS_KEY_ID=...
@@ -136,4 +143,6 @@ R2_BUCKET_NAME=...
 R2_PUBLIC_BASE_URL=https://...
 ```
 
-No subas archivos `.env`, contraseñas, tokens ni bases SQLite al repositorio.
+No uses `localhost` en `DATABASE_URL` o `MYSQL_HOST` dentro de Render: `localhost` apunta al contenedor del backend, no a tu base MySQL.
+
+No subas archivos `.env`, contrasenas, tokens ni bases SQLite al repositorio.

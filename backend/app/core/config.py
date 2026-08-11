@@ -33,13 +33,14 @@ class Settings(BaseSettings):
     R2_PUBLIC_BASE_URL: str | None = None
 
     def get_database_url(self) -> str:
-        if self.DATABASE_URL:
-            db_url = self.DATABASE_URL
         # En desarrollo permitimos usar SQLite local para evitar depender de MySQL
         use_sqlite = os.getenv("USE_SQLITE", "1").lower() in ("1", "true", "yes")
         if self.APP_ENV == "development" and use_sqlite and not self.DATABASE_URL:
             sqlite_path = os.getenv("SQLITE_PATH", "dev.db")
             return f"sqlite+aiosqlite:///{sqlite_path}"
+
+        if self.DATABASE_URL:
+            db_url = self.DATABASE_URL
         elif self.MYSQL_URL:
             db_url = self.MYSQL_URL
         elif self.MYSQLHOST and self.MYSQLUSER and self.MYSQLDATABASE:
@@ -50,6 +51,10 @@ class Settings(BaseSettings):
                 f"@{self.MYSQLHOST}:{mysql_port}/{self.MYSQLDATABASE}"
             )
         else:
+            if self.APP_ENV != "development" and self.MYSQL_HOST == "localhost":
+                raise ValueError(
+                    "DATABASE_URL o MYSQL_HOST deben apuntar a una base MySQL externa en produccion."
+                )
             return (
                 f"mysql+aiomysql://{self.MYSQL_USER}:{self.MYSQL_PASSWORD}"
                 f"@{self.MYSQL_HOST}:{self.MYSQL_PORT}/{self.MYSQL_DB}"
