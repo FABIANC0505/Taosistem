@@ -67,6 +67,12 @@ def create_app() -> FastAPI:
     async def validation_exception_handler(request: Request, exc: RequestValidationError):
         return JSONResponse(status_code=422, content={"detail": "Datos inválidos", "errors": exc.errors()})
 
+    @app.exception_handler(Exception)
+    async def global_exception_handler(request: Request, exc: Exception):
+        import logging
+        logging.error(f"Unhandled Exception: {exc}", exc_info=True)
+        return JSONResponse(status_code=500, content={"detail": "Ha ocurrido un error interno del servidor."})
+
     return app
 
 
