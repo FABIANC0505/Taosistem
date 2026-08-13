@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Navbar } from '../components/Navbar';
 import { Sidebar } from '../components/Sidebar';
+import { Footer } from '../components/Footer';
 
 export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -16,10 +17,11 @@ export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children 
       <div className="flex flex-1 overflow-hidden">
         <Sidebar open={sidebarOpen} onClose={closeSidebar} />
 
-        <main className="flex-1 overflow-y-auto lg:ml-64">
-          <div className="p-6">
+        <main className="flex-1 flex flex-col justify-between overflow-y-auto lg:ml-64">
+          <div className="p-6 flex-1">
             {children}
           </div>
+          <Footer />
         </main>
       </div>
     </div>

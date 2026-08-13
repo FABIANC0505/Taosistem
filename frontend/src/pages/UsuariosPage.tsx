@@ -3,6 +3,7 @@ import { Plus, Trash2, Shield, Lock } from 'lucide-react';
 import { AdminLayout } from '../components/AdminLayout';
 import { User, UserRole } from '../types';
 import { userService } from '../services/userService';
+import { getErrorMessage } from '../utils/errorUtils';
 
 export const UsuariosPage: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -36,7 +37,7 @@ export const UsuariosPage: React.FC = () => {
       const data = await userService.getAll();
       setUsers(data);
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Error al cargar usuarios');
+      setError(getErrorMessage(err, 'Error al cargar usuarios'));
       console.error(err);
     } finally {
       setLoading(false);
@@ -45,23 +46,44 @@ export const UsuariosPage: React.FC = () => {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+
+    const cleanNombre = formData.nombre.trim();
+    const cleanEmail = formData.email.trim().toLowerCase();
+    const cleanPassword = formData.password.trim();
+
+    if (cleanNombre.length < 2) {
+      setError('El nombre debe tener al menos 2 caracteres');
+      return;
+    }
+
+    if (cleanPassword.length < 8) {
+      setError('La contraseña debe tener al menos 8 caracteres');
+      return;
+    }
+
     try {
-      await userService.create(formData);
+      await userService.create({
+        nombre: cleanNombre,
+        email: cleanEmail,
+        password: cleanPassword,
+        rol: formData.rol,
+      });
       setFormData({ nombre: '', email: '', password: '', rol: UserRole.MESERO });
       setShowForm(false);
       await loadUsers();
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Error al crear usuario');
+      setError(getErrorMessage(err, 'Error al crear usuario'));
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm('¿ Estás seguro de que deseas eliminar este usuario?')) {
+    if (window.confirm('¿Estás seguro de que deseas eliminar este usuario?')) {
       try {
         await userService.delete(id);
         await loadUsers();
-      } catch (err) {
-        setError('Error al eliminar usuario');
+      } catch (err: any) {
+        setError(getErrorMessage(err, 'Error al eliminar usuario'));
       }
     }
   };
@@ -71,7 +93,7 @@ export const UsuariosPage: React.FC = () => {
       await userService.updateRole(id, newRole);
       await loadUsers();
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Error al actualizar rol');
+      setError(getErrorMessage(err, 'Error al actualizar rol'));
     }
   };
 
@@ -84,22 +106,22 @@ export const UsuariosPage: React.FC = () => {
       }
       await loadUsers();
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Error al actualizar estado del usuario');
+      setError(getErrorMessage(err, 'Error al actualizar estado del usuario'));
     }
   };
 
   const getRoleColor = (role: UserRole) => {
     switch (role) {
       case UserRole.ADMIN:
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-100 text-red-900 border-red-300';
       case UserRole.COCINA:
-        return 'bg-orange-100 text-orange-800';
+        return 'bg-orange-100 text-orange-900 border-orange-300';
       case UserRole.MESERO:
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-100 text-blue-900 border-blue-300';
       case UserRole.CAJERO:
-        return 'bg-emerald-100 text-emerald-800';
+        return 'bg-emerald-100 text-emerald-900 border-emerald-300';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-900 border-gray-300';
     }
   };
 
@@ -130,55 +152,75 @@ export const UsuariosPage: React.FC = () => {
         {/* Formulario */}
         {showForm && (
           <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold mb-4">Crear Nuevo Usuario</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Crear Nuevo Usuario</h3>
             <form onSubmit={handleCreate} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input
-                  type="text"
-                  placeholder="Nombre"
-                  value={formData.nombre}
-                  onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-                  required
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
-                />
-                <input
-                  type="email"
-                  placeholder="Email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  required
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
-                />
-                <input
-                  type="password"
-                  placeholder="Contraseña"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  required
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
-                />
-                <select
-                  value={formData.rol}
-                  onChange={(e) => setFormData({ ...formData, rol: e.target.value as UserRole })}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
-                >
-                  <option value={UserRole.MESERO}>Mesero</option>
-                  <option value={UserRole.COCINA}>Cocina</option>
-                  <option value={UserRole.CAJERO}>Cajero</option>
-                  <option value={UserRole.ADMIN}>Admin</option>
-                </select>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Nombre</label>
+                  <input
+                    type="text"
+                    placeholder="Nombre completo"
+                    value={formData.nombre}
+                    onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                    required
+                    minLength={2}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:bg-white focus:text-gray-900 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Correo electrónico</label>
+                  <input
+                    type="email"
+                    placeholder="usuario@restaurante.com"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:bg-white focus:text-gray-900 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">
+                    Contraseña <span className="text-gray-500 font-normal">(Mínimo 8 caracteres)</span>
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="••••••••"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    required
+                    minLength={8}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:bg-white focus:text-gray-900 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Rol</label>
+                  <select
+                    value={formData.rol}
+                    onChange={(e) => setFormData({ ...formData, rol: e.target.value as UserRole })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:bg-white focus:text-gray-900 outline-none"
+                  >
+                    <option className="bg-white text-gray-900" value={UserRole.MESERO}>Mesero</option>
+                    <option className="bg-white text-gray-900" value={UserRole.COCINA}>Cocina</option>
+                    <option className="bg-white text-gray-900" value={UserRole.CAJERO}>Cajero</option>
+                    <option className="bg-white text-gray-900" value={UserRole.ADMIN}>Admin</option>
+                  </select>
+                </div>
               </div>
-              <div className="flex gap-2">
+
+              <div className="flex gap-2 pt-2">
                 <button
                   type="submit"
-                  className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition"
+                  className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition font-medium"
                 >
                   Crear
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg transition"
+                  className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg transition font-medium"
                 >
                   Cancelar
                 </button>
@@ -215,18 +257,18 @@ export const UsuariosPage: React.FC = () => {
                   ) : (
                     users.map((user) => (
                       <tr key={user.id} className="hover:bg-gray-50 transition">
-                        <td className="px-6 py-4 text-sm">{user.nombre}</td>
+                        <td className="px-6 py-4 text-sm text-gray-900 font-medium">{user.nombre}</td>
                         <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
                         <td className="px-6 py-4 text-sm">
                           <select
                             value={user.rol}
                             onChange={(e) => handleUpdateRole(user.id, e.target.value as UserRole)}
-                            className={`px-3 py-1 rounded-lg text-sm font-medium border-0 cursor-pointer ${getRoleColor(user.rol)}`}
+                            className={`px-3 py-1 rounded-lg text-sm font-semibold border cursor-pointer ${getRoleColor(user.rol)}`}
                           >
-                            <option value={UserRole.MESERO}>Mesero</option>
-                            <option value={UserRole.COCINA}>Cocina</option>
-                            <option value={UserRole.CAJERO}>Cajero</option>
-                            <option value={UserRole.ADMIN}>Admin</option>
+                            <option className="bg-white text-gray-900" value={UserRole.MESERO}>Mesero</option>
+                            <option className="bg-white text-gray-900" value={UserRole.COCINA}>Cocina</option>
+                            <option className="bg-white text-gray-900" value={UserRole.CAJERO}>Cajero</option>
+                            <option className="bg-white text-gray-900" value={UserRole.ADMIN}>Admin</option>
                           </select>
                         </td>
                         <td className="px-6 py-4 text-sm">

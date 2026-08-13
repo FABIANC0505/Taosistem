@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { LogOut, Menu, X } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { Footer } from './Footer';
 
 interface RoleShellNavItem {
   label: string;
@@ -111,7 +112,10 @@ export const RoleShellLayout: React.FC<RoleShellLayoutProps> = ({
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto px-4 py-5 sm:px-6">{children}</main>
+        <main className="flex-1 flex flex-col justify-between overflow-y-auto px-4 py-5 sm:px-6">
+          <div className="flex-1">{children}</div>
+          <Footer />
+        </main>
       </div>
     </div>
   );
