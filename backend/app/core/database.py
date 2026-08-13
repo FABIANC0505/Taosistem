@@ -31,6 +31,8 @@ def _prepare_engine_config(database_url: str) -> tuple[str, dict[str, Any]]:
             break
 
     engine_kwargs["pool_pre_ping"] = True
+    connect_args: dict[str, Any] = {"connect_timeout": 10}
+
     if ssl_mode not in {None, "disabled", "disable", "false", "0"} or (
         url.host and url.host.endswith(".aivencloud.com")
     ):
@@ -38,7 +40,9 @@ def _prepare_engine_config(database_url: str) -> tuple[str, dict[str, Any]]:
         if ssl_mode in {None, "required", "preferred", "true", "1"}:
             ssl_context.check_hostname = False
             ssl_context.verify_mode = ssl.CERT_NONE
-        engine_kwargs["connect_args"] = {"ssl": ssl_context}
+        connect_args["ssl"] = ssl_context
+
+    engine_kwargs["connect_args"] = connect_args
 
     normalized_url = url.set(query=query)
     return normalized_url.render_as_string(hide_password=False), engine_kwargs
@@ -125,12 +129,12 @@ async def init_db():
         sqlite_path = DATABASE_URL.rsplit("/", 1)[-1]
         Path(sqlite_path).parent.mkdir(parents=True, exist_ok=True)
 
-    async with engine.begin() as connection:
-        await connection.run_sync(Base.metadata.create_all)
+    try:
+        async with engine.begin() as connection:
+            await connection.run_sync(Base.metadata.create_all)
 
-    # Crear usuario administrador inicial si la tabla de usuarios está vacía
-    async with session_factory() as session:
-        try:
+        # Crear usuario administrador inicial si la tabla de usuarios está vacía
+        async with session_factory() as session:
             user_count = await fetch_one(session, "SELECT COUNT(1) as c FROM users")
             if not user_count or user_count.get("c", 0) == 0:
                 from uuid import uuid4
@@ -144,8 +148,8 @@ async def init_db():
                     (admin_id, "Administrador Demo", "admin@restaurante.com", admin_hash, "admin", 1),
                 )
                 print("Usuario admin inicial creado exitosamente en la base de datos.")
-        except Exception as exc:
-            print(f"Aviso al verificar/sembrar usuario inicial: {exc}")
+    except Exception as exc:
+        print(f"Error o aviso al conectar/inicializar la base de datos: {exc}")
 
 
 
