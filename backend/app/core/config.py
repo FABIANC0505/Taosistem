@@ -34,9 +34,8 @@ class Settings(BaseSettings):
     R2_PUBLIC_BASE_URL: str | None = None
 
     def get_database_url(self) -> str:
-        # En desarrollo permitimos usar SQLite local para evitar depender de MySQL
-        use_sqlite = os.getenv("USE_SQLITE", "1").lower() in ("1", "true", "yes")
-        if self.APP_ENV == "development" and use_sqlite and not self.DATABASE_URL:
+        use_sqlite = os.getenv("USE_SQLITE", "0").lower() in ("1", "true", "yes")
+        if (use_sqlite or (self.APP_ENV == "development" and not self.DATABASE_URL)) and not self.DATABASE_URL:
             sqlite_path = os.getenv("SQLITE_PATH", "dev.db")
             return f"sqlite+aiosqlite:///{sqlite_path}"
 
