@@ -440,7 +440,7 @@ export const CajaPage: React.FC = () => {
                   <button
                     onClick={() => void handleCreateMovement()}
                     disabled={!session?.is_open || !movementAmount || !movementDescription}
-                    className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-white disabled:opacity-60"
+                    className="inline-flex items-center gap-2 rounded-xl border border-slate-600 bg-slate-800 px-4 py-2.5 text-sm font-semibold text-slate-100 transition hover:bg-slate-700 disabled:opacity-60"
                   >
                     <ReceiptText size={16} />
                     Registrar salida
@@ -469,7 +469,7 @@ export const CajaPage: React.FC = () => {
                         <p className="mt-1 text-sm text-slate-300">{alert.message}</p>
                         <button
                           onClick={() => void handleResolveAlert(alert.id)}
-                          className="mt-3 rounded-lg border border-slate-700 bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-950 transition hover:bg-white"
+                          className="mt-3 rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-xs font-semibold text-slate-100 transition hover:bg-slate-700"
                         >
                           Marcar resuelto
                         </button>

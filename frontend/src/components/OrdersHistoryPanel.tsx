@@ -73,78 +73,96 @@ export const OrdersHistoryPanel: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Historial operativo</h1>
-          <p className="text-sm text-gray-600 mt-1">Seguimiento de tiempos de preparación, entrega y domicilios</p>
+          <h1 className="text-2xl font-bold text-slate-100">Historial operativo</h1>
+          <p className="mt-1 text-sm text-slate-400">Seguimiento de tiempos de preparación, entrega y domicilios</p>
         </div>
 
         <button
           onClick={loadHistory}
-          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50"
+          className="icon-button inline-flex items-center gap-2"
         >
           <RefreshCw size={16} />
           Recargar
         </button>
       </div>
 
-      {error && <div className="p-3 rounded-lg bg-red-50 text-red-700 border border-red-200">{error}</div>}
+      {error && (
+        <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-red-200">{error}</div>
+      )}
 
       {history && (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <p className="text-sm text-gray-500">Registros en historial</p>
-            <p className="text-2xl font-bold text-gray-900 mt-2">{history.summary.total_registros}</p>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="panel-muted p-4">
+            <p className="text-sm text-slate-400">Registros en historial</p>
+            <p className="mt-2 text-2xl font-bold text-slate-100">{history.summary.total_registros}</p>
           </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <p className="text-sm text-gray-500">Entregados visibles</p>
-            <p className="text-2xl font-bold text-gray-900 mt-2">{deliveredCount}</p>
+          <div className="panel-muted p-4">
+            <p className="text-sm text-slate-400">Entregados visibles</p>
+            <p className="mt-2 text-2xl font-bold text-slate-100">{deliveredCount}</p>
           </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <p className="text-sm text-gray-500">Domicilios de la semana</p>
-            <p className="text-2xl font-bold text-gray-900 mt-2">{history.summary.total_domicilios_semana}</p>
+          <div className="panel-muted p-4">
+            <p className="text-sm text-slate-400">Domicilios de la semana</p>
+            <p className="mt-2 text-2xl font-bold text-slate-100">{history.summary.total_domicilios_semana}</p>
           </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <p className="text-sm text-gray-500">Promedio preparación</p>
-            <p className="text-2xl font-bold text-gray-900 mt-2">{formatDuration(history.summary.tiempo_promedio_preparacion_segundos)}</p>
+          <div className="panel-muted p-4">
+            <p className="text-sm text-slate-400">Promedio preparación</p>
+            <p className="mt-2 text-2xl font-bold text-slate-100">{formatDuration(history.summary.tiempo_promedio_preparacion_segundos)}</p>
           </div>
         </div>
       )}
 
       {loading ? (
-        <div className="h-40 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600"></div>
+        <div className="flex h-40 items-center justify-center">
+          <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-emerald-400" />
         </div>
       ) : !history || history.items.length === 0 ? (
-        <div className="p-10 text-center rounded-xl border border-dashed border-gray-300 bg-white">
-          <p className="text-gray-600">No hay registros cerrados en el historial.</p>
+        <div className="rounded-xl border border-dashed border-slate-700 bg-slate-900/40 p-10 text-center">
+          <p className="text-slate-300">No hay registros cerrados en el historial.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
           {history.items.map((item) => (
-            <article key={item.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-4">
+            <article key={item.id} className="glass-card rounded-2xl p-4 space-y-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-xs text-gray-500">Pedido #{item.id.slice(0, 8)}</p>
-                  <h2 className="text-lg font-bold text-gray-900">{formatDestination(item)}</h2>
-                  <p className="text-sm text-gray-600 mt-1">{typeLabel[item.tipo_pedido]}</p>
+                  <p className="text-xs text-slate-400">Pedido #{item.id.slice(0, 8)}</p>
+                  <h2 className="text-lg font-bold text-slate-100">{formatDestination(item)}</h2>
+                  <p className="mt-1 text-sm text-slate-400">{typeLabel[item.tipo_pedido]}</p>
                 </div>
-                <span className="px-3 py-1 rounded-full text-xs border bg-gray-100 text-gray-700">
+                <span className="rounded-full border border-slate-700 bg-slate-800/80 px-3 py-1 text-xs text-slate-200">
                   {statusLabel[item.status]}
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 text-sm text-gray-700">
-                <p>Total items: <span className="font-semibold text-gray-900">{item.total_items}</span></p>
-                <p>Total: <span className="font-semibold text-gray-900">${Number(item.total_amount).toFixed(2)}</span></p>
-                <p>Preparación: <span className="font-semibold text-gray-900">{formatDuration(item.tiempo_preparacion_segundos)}</span></p>
-                <p>Tiempo total: <span className="font-semibold text-gray-900">{formatDuration(item.tiempo_total_segundos)}</span></p>
+              <div className="grid grid-cols-2 gap-3 text-sm text-slate-300">
+                <p>
+                  Total items: <span className="font-semibold text-slate-100">{item.total_items}</span>
+                </p>
+                <p>
+                  Total: <span className="font-semibold text-slate-100">${Number(item.total_amount).toFixed(2)}</span>
+                </p>
+                <p>
+                  Preparación: <span className="font-semibold text-slate-100">{formatDuration(item.tiempo_preparacion_segundos)}</span>
+                </p>
+                <p>
+                  Tiempo total: <span className="font-semibold text-slate-100">{formatDuration(item.tiempo_total_segundos)}</span>
+                </p>
               </div>
 
-              <div className="space-y-1 text-sm text-gray-600">
-                <p className="inline-flex items-center gap-1"><Clock3 size={14} /> Creado: {item.created_at ? new Date(item.created_at).toLocaleString() : 'Sin dato'}</p>
+              <div className="space-y-1 text-sm text-slate-300">
+                <p className="inline-flex items-center gap-1">
+                  <Clock3 size={14} /> Creado: {item.created_at ? new Date(item.created_at).toLocaleString() : 'Sin dato'}
+                </p>
                 <p>En cocina: {item.cocinando_at ? new Date(item.cocinando_at).toLocaleString() : 'Sin dato'}</p>
                 <p>Listo: {item.served_at ? new Date(item.served_at).toLocaleString() : 'Sin dato'}</p>
-                <p>Cierre: {item.entregado_at ? new Date(item.entregado_at).toLocaleString() : item.cancelado_at ? new Date(item.cancelado_at).toLocaleString() : 'Sin dato'}</p>
-                {item.cliente_nombre ? <p>Cliente: {item.cliente_nombre} {item.cliente_telefono ? `• ${item.cliente_telefono}` : ''}</p> : null}
+                <p>
+                  Cierre: {item.entregado_at ? new Date(item.entregado_at).toLocaleString() : item.cancelado_at ? new Date(item.cancelado_at).toLocaleString() : 'Sin dato'}
+                </p>
+                {item.cliente_nombre ? (
+                  <p>
+                    Cliente: {item.cliente_nombre} {item.cliente_telefono ? `• ${item.cliente_telefono}` : ''}
+                  </p>
+                ) : null}
                 {item.notas ? <p>Notas: {item.notas}</p> : null}
               </div>
             </article>

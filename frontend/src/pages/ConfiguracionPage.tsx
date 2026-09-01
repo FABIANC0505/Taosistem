@@ -53,35 +53,33 @@ export const ConfiguracionPage: React.FC = () => {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Configuración del Restaurante</h1>
-          <p className="text-gray-600 mt-2">Administra la configuración general de tu establecimiento</p>
+          <h1 className="text-3xl font-bold text-slate-100">Configuración del Restaurante</h1>
+          <p className="mt-2 text-slate-300">Administra la configuración general de tu establecimiento</p>
         </div>
 
         {success && (
-          <div className="p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg">
+          <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-4 text-emerald-200">
             {success}
           </div>
         )}
 
         {error && (
-          <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+          <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-red-200">
             {error}
           </div>
         )}
 
-        {/* Configuración General */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
+        <div className="rounded-2xl border border-slate-800/80 bg-slate-900/70 p-6 shadow-xl shadow-slate-950/30">
+          <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-slate-100">
             <Settings size={20} />
             Información General
           </h3>
 
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="mb-2 block text-sm font-medium text-slate-300">
                   Nombre del Restaurante
                 </label>
                 <input
@@ -89,12 +87,12 @@ export const ConfiguracionPage: React.FC = () => {
                   name="nombreRestaurante"
                   value={settings.nombreRestaurante}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+                  className="field-input w-full"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="mb-2 block text-sm font-medium text-slate-300">
                   Email de Contacto
                 </label>
                 <input
@@ -102,12 +100,12 @@ export const ConfiguracionPage: React.FC = () => {
                   name="emailContacto"
                   value={settings.emailContacto}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+                  className="field-input w-full"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="mb-2 block text-sm font-medium text-slate-300">
                   Teléfono de Contacto
                 </label>
                 <input
@@ -115,12 +113,12 @@ export const ConfiguracionPage: React.FC = () => {
                   name="telefonoContacto"
                   value={settings.telefonoContacto}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+                  className="field-input w-full"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="mb-2 block text-sm font-medium text-slate-300">
                   Dirección
                 </label>
                 <input
@@ -128,17 +126,16 @@ export const ConfiguracionPage: React.FC = () => {
                   name="direccion"
                   value={settings.direccion}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+                  className="field-input w-full"
                 />
               </div>
             </div>
 
-            {/* Horarios */}
-            <div className="pt-6 border-t border-gray-200">
-              <h4 className="text-md font-semibold mb-4">Horarios de Operación</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="border-t border-slate-700 pt-6">
+              <h4 className="mb-4 text-md font-semibold text-slate-100">Horarios de Operación</h4>
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="mb-2 block text-sm font-medium text-slate-300">
                     Hora de Apertura
                   </label>
                   <input
@@ -146,12 +143,12 @@ export const ConfiguracionPage: React.FC = () => {
                     name="horarioApertura"
                     value={settings.horarioApertura}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+                    className="field-input w-full"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="mb-2 block text-sm font-medium text-slate-300">
                     Hora de Cierre
                   </label>
                   <input
@@ -159,18 +156,17 @@ export const ConfiguracionPage: React.FC = () => {
                     name="horarioCierre"
                     value={settings.horarioCierre}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+                    className="field-input w-full"
                   />
                 </div>
               </div>
             </div>
 
-            {/* Impuestos y Moneda */}
-            <div className="pt-6 border-t border-gray-200">
-              <h4 className="text-md font-semibold mb-4">Impuestos y Moneda</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="border-t border-slate-700 pt-6">
+              <h4 className="mb-4 text-md font-semibold text-slate-100">Impuestos y Moneda</h4>
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="mb-2 block text-sm font-medium text-slate-300">
                     Porcentaje de Impuestos (%)
                   </label>
                   <input
@@ -179,19 +175,19 @@ export const ConfiguracionPage: React.FC = () => {
                     value={settings.impuestos}
                     onChange={handleChange}
                     step="0.01"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+                    className="field-input w-full"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="mb-2 block text-sm font-medium text-slate-300">
                     Moneda
                   </label>
                   <select
                     name="moneda"
                     value={settings.moneda}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+                    className="field-input w-full"
                   >
                     <option value="EUR">EUR (€)</option>
                     <option value="USD">USD ($)</option>
@@ -202,11 +198,11 @@ export const ConfiguracionPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="pt-6 border-t border-gray-200">
-              <h4 className="text-md font-semibold mb-4">Historial de Pedidos</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="border-t border-slate-700 pt-6">
+              <h4 className="mb-4 text-md font-semibold text-slate-100">Historial de Pedidos</h4>
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="mb-2 block text-sm font-medium text-slate-300">
                     Retención de historial (días)
                   </label>
                   <input
@@ -215,20 +211,19 @@ export const ConfiguracionPage: React.FC = () => {
                     max={3650}
                     value={retentionDays}
                     onChange={(e) => setRetentionDays(Number(e.target.value || 1))}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+                    className="field-input w-full"
                   />
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className="mt-2 text-xs text-slate-400">
                     Los pedidos despachados más antiguos que este límite se eliminarán automáticamente.
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Botón Guardar */}
-            <div className="pt-6 border-t border-gray-200 flex justify-end">
+            <div className="flex justify-end border-t border-slate-700 pt-6">
               <button
                 onClick={handleSave}
-                className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 rounded-lg transition"
+                className="flex items-center gap-2 rounded-lg bg-emerald-500 px-6 py-2 font-medium text-slate-950 transition hover:bg-emerald-400"
               >
                 <Save size={20} />
                 Guardar Cambios
