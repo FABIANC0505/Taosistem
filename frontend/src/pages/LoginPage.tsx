@@ -13,6 +13,8 @@ export const LoginPage: React.FC = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const missingProductionApiConfig = import.meta.env.PROD && !isApiBaseUrlConfigured();
+  const showEmailIcon = !email;
+  const showPasswordIcon = !password;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,7 +86,7 @@ export const LoginPage: React.FC = () => {
 
           <div className="panel-surface w-full max-w-md justify-self-center p-8 shadow-[0_30px_80px_rgba(2,6,23,0.7)] sm:p-10">
             <div className="mb-8 text-center">
-              <div className="mx-auto mb-4 inline-flex rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-emerald-300">
+              <div className="mx-auto mb-4 inline-flex rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.15)]">
                 Acceso seguro
               </div>
               <h1 className="gradient-text text-3xl font-bold">RestauTech</h1>
@@ -104,7 +106,9 @@ export const LoginPage: React.FC = () => {
                 </label>
                 <div className="relative">
                   <Mail
-                    className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
+                    className={`pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 transition-opacity duration-200 ${
+                      showEmailIcon ? 'opacity-100' : 'opacity-0'
+                    }`}
                     size={18}
                   />
                   <input
@@ -113,7 +117,7 @@ export const LoginPage: React.FC = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     disabled={loading}
-                    className="field-input pl-12 pr-4 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="field-input border-slate-700/80 bg-slate-900/80 pl-12 pr-4 text-slate-50 shadow-inner shadow-slate-950/50 focus:border-emerald-400/80 focus:shadow-[0_0_0_4px_rgba(16,185,129,0.12)] disabled:cursor-not-allowed disabled:opacity-60"
                     placeholder="admin@restaurante.com"
                   />
                 </div>
@@ -125,7 +129,9 @@ export const LoginPage: React.FC = () => {
                 </label>
                 <div className="relative">
                   <Lock
-                    className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
+                    className={`pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 transition-opacity duration-200 ${
+                      showPasswordIcon ? 'opacity-100' : 'opacity-0'
+                    }`}
                     size={18}
                   />
                   <input
@@ -134,7 +140,7 @@ export const LoginPage: React.FC = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     disabled={loading}
-                    className="field-input pl-12 pr-4 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="field-input border-slate-700/80 bg-slate-900/80 pl-12 pr-4 text-slate-50 shadow-inner shadow-slate-950/50 focus:border-emerald-400/80 focus:shadow-[0_0_0_4px_rgba(16,185,129,0.12)] disabled:cursor-not-allowed disabled:opacity-60"
                     placeholder="Tu contrasena"
                   />
                 </div>
@@ -146,7 +152,11 @@ export const LoginPage: React.FC = () => {
                 </div>
               )}
 
-              <button type="submit" disabled={loading} className="primary-button w-full">
+              <button
+                type="submit"
+                disabled={loading}
+                className="primary-button w-full rounded-full shadow-[0_18px_38px_rgba(16,185,129,0.28)]"
+              >
                 {loading ? 'Iniciando sesion...' : 'Iniciar sesion'}
               </button>
             </form>
