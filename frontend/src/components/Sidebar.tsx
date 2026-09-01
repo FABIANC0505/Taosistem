@@ -45,20 +45,25 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
       )}
 
       <aside
-        className={`fixed top-0 left-0 z-40 h-full w-64 border-r border-slate-800/80 bg-slate-950/92 backdrop-blur-xl transform transition-transform duration-500 ease-in-out lg:translate-x-0 ${
+        className={`fixed left-0 top-0 z-40 h-full w-64 border-r border-slate-800/80 bg-slate-950/92 backdrop-blur-xl transition-transform duration-500 ease-in-out lg:translate-x-0 ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
         style={{ marginTop: '60px' }}
       >
-        <div className="p-6 flex flex-col gap-6">
+        <div className="flex flex-col gap-6 p-6">
           <button
             onClick={onClose}
-            className="icon-button lg:hidden absolute top-4 right-4"
+            className="icon-button absolute right-4 top-4 lg:hidden"
           >
             <X size={20} />
           </button>
 
-          <nav className="space-y-2 mt-8 lg:mt-0">
+          <div className="mt-8 rounded-2xl border border-slate-800 bg-gradient-to-r from-slate-900 to-slate-950/80 p-3 lg:mt-0">
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Administracion</p>
+            <p className="mt-2 text-lg font-semibold text-slate-100">Panel central</p>
+          </div>
+
+          <nav className="mt-2 space-y-2">
             {navItems.map((item) => (
               <Link
                 key={item.href}

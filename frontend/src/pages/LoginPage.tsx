@@ -51,10 +51,12 @@ export const LoginPage: React.FC = () => {
 
   return (
     <div className="gradient-bg flex min-h-screen flex-col justify-between">
-      <div className="flex-1 flex items-center justify-center p-4 py-8">
+      <div className="flex flex-1 items-center justify-center p-4 py-8">
         <div className="grid w-full max-w-5xl gap-6 lg:grid-cols-[1.05fr_0.95fr]">
           <section className="panel-surface relative hidden overflow-hidden p-8 lg:flex lg:flex-col lg:justify-between">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(34,197,94,0.18),_transparent_32%),radial-gradient(circle_at_bottom_right,_rgba(56,189,248,0.16),_transparent_30%)]" />
+            <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-emerald-500/20 blur-3xl" />
+            <div className="absolute -bottom-10 left-8 h-32 w-32 rounded-full bg-cyan-500/15 blur-3xl" />
 
             <div className="relative z-10">
               <p className="text-sm uppercase tracking-[0.3em] text-emerald-300">RestauTech</p>
@@ -72,7 +74,7 @@ export const LoginPage: React.FC = () => {
                 ['Cocina', 'Tiempos y entregas'],
                 ['Caja', 'Arqueo y mesas'],
               ].map(([title, text]) => (
-                <div key={title} className="panel-muted p-4">
+                <div key={title} className="panel-muted p-4 shadow-lg shadow-slate-950/20">
                   <p className="text-sm font-bold text-slate-100">{title}</p>
                   <p className="mt-1 text-sm text-slate-400">{text}</p>
                 </div>
@@ -80,7 +82,7 @@ export const LoginPage: React.FC = () => {
             </div>
           </section>
 
-          <div className="panel-surface w-full max-w-md justify-self-center p-8 sm:p-10">
+          <div className="panel-surface w-full max-w-md justify-self-center p-8 shadow-[0_30px_80px_rgba(2,6,23,0.7)] sm:p-10">
             <div className="mb-8 text-center">
               <div className="mx-auto mb-4 inline-flex rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-emerald-300">
                 Acceso seguro
