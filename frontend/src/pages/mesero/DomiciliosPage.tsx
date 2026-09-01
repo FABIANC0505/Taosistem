@@ -31,9 +31,7 @@ export const DomiciliosPage: React.FC = () => {
   );
 
   const recentDelivered = useMemo(
-    () =>
-      history?.items.filter((item) => item.tipo_pedido === OrderType.DOMICILIO && item.status === OrderStatus.ENTREGADO).slice(0, 8) ||
-      [],
+    () => history?.items.filter((item) => item.tipo_pedido === OrderType.DOMICILIO && item.status === OrderStatus.ENTREGADO).slice(0, 8) || [],
     [history]
   );
 
@@ -75,21 +73,18 @@ export const DomiciliosPage: React.FC = () => {
       <div className="space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Domicilios</h1>
-            <p className="text-sm text-gray-600 mt-1">Control semanal de salidas y seguimiento de entregas a domicilio</p>
+            <h1 className="text-2xl font-bold text-slate-100">Domicilios</h1>
+            <p className="mt-1 text-sm text-slate-400">Control semanal de salidas y seguimiento de entregas a domicilio</p>
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={loadData}
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50"
-            >
+            <button onClick={loadData} className="icon-button inline-flex items-center gap-2">
               <RefreshCw size={16} />
               Recargar
             </button>
             <button
               onClick={() => navigate('/mesero/pedidos/nuevo?tipo=domicilio')}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-700 text-white"
+              className="primary-button inline-flex items-center gap-2"
             >
               <Plus size={16} />
               Nuevo domicilio
@@ -97,81 +92,83 @@ export const DomiciliosPage: React.FC = () => {
           </div>
         </div>
 
-        {error && <div className="p-3 rounded-lg bg-red-50 text-red-700 border border-red-200">{error}</div>}
+        {error && (
+          <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-red-200">{error}</div>
+        )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <p className="text-sm text-gray-500">Domicilios activos</p>
-            <p className="text-2xl font-bold text-gray-900 mt-2">{activeDomicilios.length}</p>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div className="panel-muted p-4">
+            <p className="text-sm text-slate-400">Domicilios activos</p>
+            <p className="mt-2 text-2xl font-bold text-slate-100">{activeDomicilios.length}</p>
           </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <p className="text-sm text-gray-500">Domicilios visibles en historial semanal</p>
-            <p className="text-2xl font-bold text-gray-900 mt-2">{history?.summary.total_domicilios_semana || 0}</p>
+          <div className="panel-muted p-4">
+            <p className="text-sm text-slate-400">Domicilios visibles en historial semanal</p>
+            <p className="mt-2 text-2xl font-bold text-slate-100">{history?.summary.total_domicilios_semana || 0}</p>
           </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <p className="text-sm text-gray-500">Historial reciente</p>
-            <p className="text-2xl font-bold text-gray-900 mt-2">{recentDelivered.length}</p>
+          <div className="panel-muted p-4">
+            <p className="text-sm text-slate-400">Historial reciente</p>
+            <p className="mt-2 text-2xl font-bold text-slate-100">{recentDelivered.length}</p>
           </div>
         </div>
 
         {loading ? (
-          <div className="h-40 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600"></div>
+          <div className="flex h-40 items-center justify-center">
+            <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-emerald-400" />
           </div>
         ) : (
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            <section className="bg-white rounded-xl border border-gray-200 p-4 space-y-4">
-              <div className="flex items-center gap-2">
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+            <section className="glass-card rounded-2xl p-4 space-y-4">
+              <div className="flex items-center gap-2 text-slate-100">
                 <Bike size={18} />
-                <h2 className="font-semibold text-gray-900">Domicilios en curso</h2>
+                <h2 className="font-semibold">Domicilios en curso</h2>
               </div>
 
               {activeDomicilios.length === 0 ? (
-                <p className="text-sm text-gray-500">No hay domicilios activos.</p>
+                <p className="text-sm text-slate-400">No hay domicilios activos.</p>
               ) : (
                 <div className="space-y-3">
                   {activeDomicilios.map((order) => (
-                    <article key={order.id} className="rounded-xl border border-gray-200 p-4">
+                    <article key={order.id} className="rounded-xl border border-slate-700 bg-slate-950/40 p-4">
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="text-xs text-gray-500">Pedido #{order.id.slice(0, 8)}</p>
-                          <h3 className="font-semibold text-gray-900">{order.cliente_nombre || 'Cliente sin nombre'}</h3>
-                          <p className="text-sm text-gray-600">{statusLabel[order.status]}</p>
+                          <p className="text-xs text-slate-400">Pedido #{order.id.slice(0, 8)}</p>
+                          <h3 className="font-semibold text-slate-100">{order.cliente_nombre || 'Cliente sin nombre'}</h3>
+                          <p className="text-sm text-slate-300">{statusLabel[order.status]}</p>
                         </div>
                         <button
                           onClick={() => navigate(`/mesero/pedidos/${order.id}/editar`)}
-                          className="px-3 py-2 rounded-lg border border-gray-300 text-sm hover:bg-gray-50"
+                          className="rounded-lg border border-slate-700 bg-slate-900/80 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
                         >
                           Ver detalle
                         </button>
                       </div>
-                      <p className="mt-3 text-sm text-gray-700 inline-flex items-center gap-2">
+                      <p className="mt-3 inline-flex items-center gap-2 text-sm text-slate-300">
                         <MapPin size={14} />
                         {order.direccion_entrega || 'Sin dirección registrada'}
                       </p>
-                      <p className="mt-2 text-sm text-gray-600">{order.cliente_telefono || 'Sin teléfono'}</p>
+                      <p className="mt-2 text-sm text-slate-400">{order.cliente_telefono || 'Sin teléfono'}</p>
                     </article>
                   ))}
                 </div>
               )}
             </section>
 
-            <section className="bg-white rounded-xl border border-gray-200 p-4 space-y-4">
-              <h2 className="font-semibold text-gray-900">Últimos domicilios entregados</h2>
+            <section className="glass-card rounded-2xl p-4 space-y-4">
+              <h2 className="font-semibold text-slate-100">Últimos domicilios entregados</h2>
               {recentDelivered.length === 0 ? (
-                <p className="text-sm text-gray-500">Aún no hay domicilios entregados en el historial visible.</p>
+                <p className="text-sm text-slate-400">Aún no hay domicilios entregados en el historial visible.</p>
               ) : (
                 <div className="space-y-3">
                   {recentDelivered.map((item) => (
-                    <article key={item.id} className="rounded-xl border border-gray-200 p-4 text-sm">
+                    <article key={item.id} className="rounded-xl border border-slate-700 bg-slate-950/40 p-4 text-sm">
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="font-semibold text-gray-900">{item.cliente_nombre || 'Cliente sin nombre'}</p>
-                          <p className="text-gray-600">{item.direccion_entrega || 'Sin dirección'}</p>
+                          <p className="font-semibold text-slate-100">{item.cliente_nombre || 'Cliente sin nombre'}</p>
+                          <p className="text-slate-300">{item.direccion_entrega || 'Sin dirección'}</p>
                         </div>
-                        <span className="text-gray-500">{item.entregado_at ? new Date(item.entregado_at).toLocaleDateString() : 'Sin fecha'}</span>
+                        <span className="text-slate-400">{item.entregado_at ? new Date(item.entregado_at).toLocaleDateString() : 'Sin fecha'}</span>
                       </div>
-                      <div className="mt-2 flex items-center justify-between text-gray-600">
+                      <div className="mt-2 flex items-center justify-between text-slate-300">
                         <span>${Number(item.total_amount).toFixed(2)}</span>
                         <span>Tiempo total: {item.tiempo_total_segundos ? `${Math.round(item.tiempo_total_segundos / 60)} min` : 'Sin dato'}</span>
                       </div>

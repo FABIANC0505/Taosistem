@@ -189,8 +189,8 @@ export const NuevoPedidoPage: React.FC = () => {
   if (loading) {
     return (
       <MeseroLayout>
-        <div className="h-56 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600"></div>
+        <div className="flex h-56 items-center justify-center">
+          <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-emerald-400"></div>
         </div>
       </MeseroLayout>
     );
@@ -202,25 +202,25 @@ export const NuevoPedidoPage: React.FC = () => {
         <div className="flex items-center justify-between gap-3">
           <button
             onClick={() => navigate(tipoPedido === OrderType.DOMICILIO ? '/mesero/domicilios' : '/mesero/pedidos')}
-            className="inline-flex items-center gap-2 text-gray-700 hover:text-gray-900"
+            className="inline-flex items-center gap-2 text-slate-300 hover:text-white"
           >
             <ArrowLeft size={18} />
             Volver
           </button>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+          <h1 className="text-xl font-bold text-slate-100 sm:text-2xl">
             {isEditing ? 'Editar pedido' : 'Nuevo pedido'}
           </h1>
         </div>
 
-        {error && <div className="p-3 rounded-lg bg-red-50 text-red-700 border border-red-200">{error}</div>}
+        {error && <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-red-200">{error}</div>}
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-          <section className="xl:col-span-2 bg-white rounded-xl border border-gray-200 p-4 sm:p-5 space-y-4">
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+          <section className="space-y-4 rounded-2xl border border-slate-800/80 bg-slate-900/70 p-4 sm:p-5 xl:col-span-2">
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => setTipoPedido(OrderType.MESA)}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border ${
-                  tipoPedido === OrderType.MESA ? 'bg-primary-100 text-primary-700 border-primary-200' : 'border-gray-300 text-gray-700'
+                className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2 ${
+                  tipoPedido === OrderType.MESA ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200' : 'border-slate-700 bg-slate-950/40 text-slate-300'
                 }`}
               >
                 <Store size={16} />
@@ -228,8 +228,8 @@ export const NuevoPedidoPage: React.FC = () => {
               </button>
               <button
                 onClick={() => setTipoPedido(OrderType.DOMICILIO)}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border ${
-                  tipoPedido === OrderType.DOMICILIO ? 'bg-primary-100 text-primary-700 border-primary-200' : 'border-gray-300 text-gray-700'
+                className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2 ${
+                  tipoPedido === OrderType.DOMICILIO ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200' : 'border-slate-700 bg-slate-950/40 text-slate-300'
                 }`}
               >
                 <Bike size={16} />
@@ -239,16 +239,16 @@ export const NuevoPedidoPage: React.FC = () => {
 
             {tipoPedido === OrderType.MESA ? (
               <div>
-                <p className="text-sm font-medium text-gray-700 mb-2">Mesa</p>
-                <div className="flex flex-wrap gap-2 mb-3">
+                <p className="mb-2 text-sm font-medium text-slate-300">Mesa</p>
+                <div className="mb-3 flex flex-wrap gap-2">
                   {mesasRapidas.map((mesa) => (
                     <button
                       key={mesa}
                       onClick={() => setMesaNumero(mesa)}
-                      className={`px-3 py-2 rounded-lg border text-sm ${
+                      className={`rounded-lg border px-3 py-2 text-sm ${
                         mesaNumero === mesa
-                          ? 'bg-primary-100 text-primary-700 border-primary-200'
-                          : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                          ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200'
+                          : 'border-slate-700 bg-slate-950/40 text-slate-300 hover:bg-slate-900'
                       }`}
                     >
                       Mesa {mesa}
@@ -260,36 +260,36 @@ export const NuevoPedidoPage: React.FC = () => {
                   min={1}
                   value={mesaNumero}
                   onChange={(event) => setMesaNumero(Number(event.target.value || 1))}
-                  className="w-full md:w-44 px-3 py-2 border border-gray-300 rounded-lg"
+                  className="field-input w-full md:w-44"
                 />
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Cliente</label>
+                  <label className="text-sm font-medium text-slate-300">Cliente</label>
                   <input
                     value={clienteNombre}
                     onChange={(event) => setClienteNombre(event.target.value)}
-                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    className="field-input mt-1"
                     placeholder="Nombre del cliente"
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Teléfono</label>
+                  <label className="text-sm font-medium text-slate-300">Teléfono</label>
                   <input
                     value={clienteTelefono}
                     onChange={(event) => setClienteTelefono(event.target.value)}
-                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    className="field-input mt-1"
                     placeholder="3001234567"
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="text-sm font-medium text-gray-700">Dirección</label>
+                  <label className="text-sm font-medium text-slate-300">Dirección</label>
                   <textarea
                     value={direccionEntrega}
                     onChange={(event) => setDireccionEntrega(event.target.value)}
                     rows={3}
-                    className="mt-1 w-full border border-gray-300 rounded-lg p-2 text-sm"
+                    className="field-input mt-1"
                     placeholder="Barrio, referencia, apartamento, etc."
                   />
                 </div>
@@ -297,43 +297,41 @@ export const NuevoPedidoPage: React.FC = () => {
             )}
 
             <div>
-              <p className="text-sm font-semibold text-gray-700 mb-3">Menú disponible</p>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              <p className="mb-3 text-sm font-semibold text-slate-300">Menú disponible</p>
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
                 {products.map((product) => {
                   const inCart = cart.find((c) => c.product_id === product.id);
                   return (
                     <button
                       key={product.id}
                       onClick={() => addToCart(product)}
-                      className={`group relative text-left rounded-xl border-2 overflow-hidden transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 ${
+                      className={`group relative overflow-hidden rounded-xl border-2 text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg ${
                         inCart
-                          ? 'border-primary-400 shadow-md shadow-primary-100'
-                          : 'border-gray-200 hover:border-primary-300'
+                          ? 'border-emerald-400/70 shadow-md shadow-emerald-500/10'
+                          : 'border-slate-700 hover:border-emerald-400/60'
                       }`}
                     >
-                      {/* Image or emoji fallback */}
                       {product.imagen_url ? (
                         <img
                           src={resolveMediaUrl(product.imagen_url)}
                           alt={product.nombre}
-                          className="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-200"
+                          className="h-32 w-full object-cover transition-transform duration-200 group-hover:scale-105"
                         />
                       ) : (
-                        <div className="w-full h-32 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-5xl">
+                        <div className="flex h-32 w-full items-center justify-center bg-gradient-to-br from-slate-800 to-slate-700 text-5xl">
                           {categoryEmoji(product.categoria)}
                         </div>
                       )}
 
-                      {/* In-cart badge */}
                       {inCart && (
-                        <span className="absolute top-2 right-2 bg-primary-600 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow">
+                        <span className="absolute right-2 top-2 rounded-full bg-emerald-500 px-2 py-0.5 text-xs font-bold text-white shadow">
                           x{inCart.cantidad}
                         </span>
                       )}
 
                       <div className="p-2.5">
-                        <p className="text-sm font-semibold text-gray-900 line-clamp-1">{product.nombre}</p>
-                        <p className="text-sm text-primary-700 font-bold mt-0.5">${Number(product.precio).toFixed(2)}</p>
+                        <p className="line-clamp-1 text-sm font-semibold text-slate-100">{product.nombre}</p>
+                        <p className="mt-0.5 text-sm font-bold text-emerald-300">${Number(product.precio).toFixed(2)}</p>
                       </div>
                     </button>
                   );
@@ -342,32 +340,32 @@ export const NuevoPedidoPage: React.FC = () => {
             </div>
           </section>
 
-          <aside className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 space-y-4 h-fit">
-            <div className="flex items-center gap-2">
+          <aside className="h-fit space-y-4 rounded-2xl border border-slate-800/80 bg-slate-900/70 p-4 sm:p-5">
+            <div className="flex items-center gap-2 text-slate-100">
               <ShoppingCart size={18} />
-              <h2 className="font-semibold text-gray-900">Resumen del pedido</h2>
+              <h2 className="font-semibold">Resumen del pedido</h2>
             </div>
 
             {cart.length === 0 ? (
-              <p className="text-sm text-gray-500">Aún no agregas productos.</p>
+              <p className="text-sm text-slate-400">Aún no agregas productos.</p>
             ) : (
-              <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+              <div className="max-h-80 space-y-3 overflow-y-auto pr-1">
                 {cart.map((item) => (
-                  <div key={item.product_id} className="border border-gray-200 rounded-lg p-3">
-                    <p className="text-sm font-medium text-gray-900">{item.nombre}</p>
-                    <p className="text-xs text-gray-500">${item.precio_unitario.toFixed(2)} c/u</p>
+                  <div key={item.product_id} className="rounded-lg border border-slate-700 bg-slate-950/40 p-3">
+                    <p className="text-sm font-medium text-slate-100">{item.nombre}</p>
+                    <p className="text-xs text-slate-400">${item.precio_unitario.toFixed(2)} c/u</p>
                     <div className="mt-2 flex items-center justify-between">
                       <div className="inline-flex items-center gap-2">
                         <button
                           onClick={() => updateQuantity(item.product_id, item.cantidad - 1)}
-                          className="p-1 rounded border border-gray-300 hover:bg-gray-50"
+                          className="rounded border border-slate-600 bg-slate-800 p-1 text-slate-200 hover:bg-slate-700"
                         >
                           <Minus size={14} />
                         </button>
-                        <span className="min-w-6 text-center text-sm">{item.cantidad}</span>
+                        <span className="min-w-6 text-center text-sm text-slate-100">{item.cantidad}</span>
                         <button
                           onClick={() => updateQuantity(item.product_id, item.cantidad + 1)}
-                          className="p-1 rounded border border-gray-300 hover:bg-gray-50"
+                          className="rounded border border-slate-600 bg-slate-800 p-1 text-slate-200 hover:bg-slate-700"
                         >
                           <Plus size={14} />
                         </button>
@@ -375,7 +373,7 @@ export const NuevoPedidoPage: React.FC = () => {
 
                       <button
                         onClick={() => removeFromCart(item.product_id)}
-                        className="text-red-600 hover:text-red-700"
+                        className="text-red-300 hover:text-red-200"
                         title="Quitar del pedido"
                       >
                         <Trash2 size={16} />
@@ -387,26 +385,26 @@ export const NuevoPedidoPage: React.FC = () => {
             )}
 
             <div>
-              <label className="text-sm font-medium text-gray-700">Notas especiales</label>
+              <label className="text-sm font-medium text-slate-300">Notas especiales</label>
               <textarea
                 value={notas}
                 onChange={(event) => setNotas(event.target.value)}
                 rows={3}
                 placeholder="Sin cebolla, término medio, referencia de entrega, etc."
-                className="mt-1 w-full border border-gray-300 rounded-lg p-2 text-sm"
+                className="field-input mt-1 w-full"
               />
             </div>
 
-            <div className="pt-2 border-t border-gray-200">
-              <p className="text-sm text-gray-600">Total</p>
-              <p className="text-2xl font-bold text-primary-700">${total.toFixed(2)}</p>
+            <div className="border-t border-slate-700 pt-2">
+              <p className="text-sm text-slate-400">Total</p>
+              <p className="text-2xl font-bold text-emerald-300">${total.toFixed(2)}</p>
             </div>
 
             <div className="grid grid-cols-1 gap-2">
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-60"
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-500 px-4 py-2 font-medium text-slate-950 hover:bg-emerald-400 disabled:opacity-60"
               >
                 <Save size={16} />
                 {isEditing ? 'Guardar cambios' : 'Guardar pedido'}
@@ -416,7 +414,7 @@ export const NuevoPedidoPage: React.FC = () => {
                 <button
                   onClick={handleDelete}
                   disabled={saving}
-                  className="inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 border border-red-200 text-red-700 hover:bg-red-50 disabled:opacity-60"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-2 text-red-200 hover:bg-red-500/20 disabled:opacity-60"
                 >
                   <Trash2 size={16} />
                   Eliminar pedido
@@ -424,7 +422,7 @@ export const NuevoPedidoPage: React.FC = () => {
               ) : (
                 <button
                   onClick={() => navigate(tipoPedido === OrderType.DOMICILIO ? '/mesero/domicilios' : '/mesero/pedidos')}
-                  className="rounded-lg px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50"
+                  className="rounded-lg border border-slate-600 bg-slate-800 px-4 py-2 text-slate-200 hover:bg-slate-700"
                 >
                   Cancelar
                 </button>

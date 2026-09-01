@@ -68,34 +68,32 @@ export const DescuentosPage: React.FC = () => {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Gestión de Descuentos</h1>
-            <p className="text-gray-600 mt-2">Administra promociones y descuentos</p>
+            <h1 className="text-3xl font-bold text-slate-100">Gestión de Descuentos</h1>
+            <p className="mt-2 text-slate-300">Administra promociones y descuentos</p>
           </div>
           <button
             onClick={() => setShowForm(!showForm)}
-            className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition"
+            className="flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2 font-medium text-slate-950 transition hover:bg-emerald-400"
           >
             <Plus size={20} />
             Nuevo Descuento
           </button>
         </div>
 
-        {/* Formulario */}
         {showForm && (
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold mb-4">Crear Nuevo Descuento</h3>
+          <div className="rounded-2xl border border-slate-800/80 bg-slate-900/70 p-6 shadow-xl shadow-slate-950/30">
+            <h3 className="mb-4 text-lg font-semibold text-slate-100">Crear Nuevo Descuento</h3>
             <form onSubmit={handleCreate} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <input
                   type="text"
                   placeholder="Nombre del descuento"
                   value={formData.nombre}
                   onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
                   required
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+                  className="field-input"
                 />
                 <input
                   type="number"
@@ -106,27 +104,27 @@ export const DescuentosPage: React.FC = () => {
                   value={formData.porcentaje}
                   onChange={(e) => setFormData({ ...formData, porcentaje: e.target.value })}
                   required
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+                  className="field-input"
                 />
               </div>
               <textarea
                 placeholder="Descripción del descuento"
                 value={formData.descripcion}
                 onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+                className="field-input w-full"
                 rows={3}
               ></textarea>
               <div className="flex gap-2">
                 <button
                   type="submit"
-                  className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition"
+                  className="rounded-lg bg-emerald-500 px-4 py-2 font-medium text-slate-950 transition hover:bg-emerald-400"
                 >
                   Crear
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg transition"
+                  className="rounded-lg border border-slate-600 bg-slate-800 px-4 py-2 font-medium text-slate-200 transition hover:bg-slate-700"
                 >
                   Cancelar
                 </button>
@@ -135,38 +133,37 @@ export const DescuentosPage: React.FC = () => {
           </div>
         )}
 
-        {/* Lista de descuentos */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {discounts.length === 0 ? (
-            <div className="col-span-full text-center py-12">
-              <Tag size={48} className="mx-auto text-gray-400 mb-4" />
-              <p className="text-gray-600">No hay descuentos registrados</p>
+            <div className="col-span-full py-12 text-center">
+              <Tag size={48} className="mx-auto mb-4 text-slate-400" />
+              <p className="text-slate-300">No hay descuentos registrados</p>
             </div>
           ) : (
             discounts.map((discount) => (
-              <div key={discount.id} className="bg-white rounded-lg shadow p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <h3 className="font-semibold text-lg text-gray-900">{discount.nombre}</h3>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${discount.activo ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+              <div key={discount.id} className="rounded-2xl border border-slate-800/80 bg-slate-900/70 p-6 shadow-xl shadow-slate-950/30">
+                <div className="mb-4 flex items-start justify-between">
+                  <h3 className="text-lg font-semibold text-slate-100">{discount.nombre}</h3>
+                  <span className={`rounded-full px-3 py-1 text-sm font-medium ${discount.activo ? 'bg-emerald-500/10 text-emerald-200' : 'bg-slate-700 text-slate-200'}`}>
                     {discount.activo ? 'Activo' : 'Inactivo'}
                   </span>
                 </div>
 
                 <div className="mb-4">
-                  <p className="text-3xl font-bold text-primary-600">{discount.porcentaje}%</p>
-                  <p className="text-gray-600 text-sm mt-2">{discount.descripcion}</p>
+                  <p className="text-3xl font-bold text-emerald-300">{discount.porcentaje}%</p>
+                  <p className="mt-2 text-sm text-slate-300">{discount.descripcion}</p>
                 </div>
 
-                <div className="flex gap-2 border-t pt-4">
+                <div className="flex gap-2 border-t border-slate-700 pt-4">
                   <button
                     onClick={() => handleToggle(discount.id)}
-                    className={`flex-1 px-4 py-2 rounded-lg transition ${discount.activo ? 'bg-orange-100 text-orange-700 hover:bg-orange-200' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
+                    className={`flex-1 rounded-lg px-4 py-2 transition ${discount.activo ? 'bg-orange-500/10 text-orange-200 hover:bg-orange-500/20' : 'bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/20'}`}
                   >
                     {discount.activo ? 'Desactivar' : 'Activar'}
                   </button>
                   <button
                     onClick={() => handleDelete(discount.id)}
-                    className="px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition"
+                    className="rounded-lg border border-red-500/30 px-4 py-2 text-red-200 transition hover:bg-red-500/10"
                   >
                     <Trash2 size={16} />
                   </button>

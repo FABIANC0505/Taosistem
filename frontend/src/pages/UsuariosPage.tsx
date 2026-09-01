@@ -113,30 +113,29 @@ export const UsuariosPage: React.FC = () => {
   const getRoleColor = (role: UserRole) => {
     switch (role) {
       case UserRole.ADMIN:
-        return 'bg-red-100 text-red-900 border-red-300';
+        return 'border-red-500/40 bg-red-500/10 text-red-200';
       case UserRole.COCINA:
-        return 'bg-orange-100 text-orange-900 border-orange-300';
+        return 'border-orange-500/40 bg-orange-500/10 text-orange-200';
       case UserRole.MESERO:
-        return 'bg-blue-100 text-blue-900 border-blue-300';
+        return 'border-cyan-500/40 bg-cyan-500/10 text-cyan-200';
       case UserRole.CAJERO:
-        return 'bg-emerald-100 text-emerald-900 border-emerald-300';
+        return 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200';
       default:
-        return 'bg-gray-100 text-gray-900 border-gray-300';
+        return 'border-slate-600 bg-slate-800 text-slate-200';
     }
   };
 
   return (
     <AdminLayout>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Gestión de Usuarios</h1>
-            <p className="text-gray-600 mt-2">Administra los usuarios del restaurante</p>
+            <h1 className="text-3xl font-bold text-slate-100">Gestión de Usuarios</h1>
+            <p className="mt-2 text-slate-300">Administra los usuarios del restaurante</p>
           </div>
           <button
             onClick={() => setShowForm(!showForm)}
-            className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition"
+            className="flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2 font-medium text-slate-950 transition hover:bg-emerald-400"
           >
             <Plus size={20} />
             Nuevo Usuario
@@ -144,19 +143,18 @@ export const UsuariosPage: React.FC = () => {
         </div>
 
         {error && (
-          <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+          <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-red-200">
             {error}
           </div>
         )}
 
-        {/* Formulario */}
         {showForm && (
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Crear Nuevo Usuario</h3>
+          <div className="rounded-2xl border border-slate-800/80 bg-slate-900/70 p-6 shadow-xl shadow-slate-950/30">
+            <h3 className="mb-4 text-lg font-semibold text-slate-100">Crear Nuevo Usuario</h3>
             <form onSubmit={handleCreate} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Nombre</label>
+                  <label className="mb-1 block text-xs font-semibold text-slate-300">Nombre</label>
                   <input
                     type="text"
                     placeholder="Nombre completo"
@@ -164,25 +162,25 @@ export const UsuariosPage: React.FC = () => {
                     onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
                     required
                     minLength={2}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:bg-white focus:text-gray-900 outline-none"
+                    className="field-input w-full"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Correo electrónico</label>
+                  <label className="mb-1 block text-xs font-semibold text-slate-300">Correo electrónico</label>
                   <input
                     type="email"
                     placeholder="usuario@restaurante.com"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:bg-white focus:text-gray-900 outline-none"
+                    className="field-input w-full"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">
-                    Contraseña <span className="text-gray-500 font-normal">(Mínimo 8 caracteres)</span>
+                  <label className="mb-1 block text-xs font-semibold text-slate-300">
+                    Contraseña <span className="font-normal text-slate-400">(Mínimo 8 caracteres)</span>
                   </label>
                   <input
                     type="password"
@@ -191,21 +189,21 @@ export const UsuariosPage: React.FC = () => {
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     required
                     minLength={8}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:bg-white focus:text-gray-900 outline-none"
+                    className="field-input w-full"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Rol</label>
+                  <label className="mb-1 block text-xs font-semibold text-slate-300">Rol</label>
                   <select
                     value={formData.rol}
                     onChange={(e) => setFormData({ ...formData, rol: e.target.value as UserRole })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-primary-500 focus:bg-white focus:text-gray-900 outline-none"
+                    className="field-input w-full"
                   >
-                    <option className="bg-white text-gray-900" value={UserRole.MESERO}>Mesero</option>
-                    <option className="bg-white text-gray-900" value={UserRole.COCINA}>Cocina</option>
-                    <option className="bg-white text-gray-900" value={UserRole.CAJERO}>Cajero</option>
-                    <option className="bg-white text-gray-900" value={UserRole.ADMIN}>Admin</option>
+                    <option value={UserRole.MESERO}>Mesero</option>
+                    <option value={UserRole.COCINA}>Cocina</option>
+                    <option value={UserRole.CAJERO}>Cajero</option>
+                    <option value={UserRole.ADMIN}>Admin</option>
                   </select>
                 </div>
               </div>
@@ -213,14 +211,14 @@ export const UsuariosPage: React.FC = () => {
               <div className="flex gap-2 pt-2">
                 <button
                   type="submit"
-                  className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition font-medium"
+                  className="rounded-lg bg-emerald-500 px-4 py-2 font-medium text-slate-950 transition hover:bg-emerald-400"
                 >
                   Crear
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg transition font-medium"
+                  className="rounded-lg border border-slate-600 bg-slate-800 px-4 py-2 font-medium text-slate-200 transition hover:bg-slate-700"
                 >
                   Cancelar
                 </button>
@@ -229,50 +227,49 @@ export const UsuariosPage: React.FC = () => {
           </div>
         )}
 
-        {/* Tabla de usuarios */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-900/70 shadow-xl shadow-slate-950/30">
           {loading ? (
             <div className="flex items-center justify-center p-8">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+              <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-emerald-400"></div>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead className="border-b border-slate-700 bg-slate-950/50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">Nombre</th>
-                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">Email</th>
-                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">Rol</th>
-                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">Estado</th>
-                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">Acciones</th>
+                    <th className="px-6 py-3 text-left text-sm font-medium text-slate-300">Nombre</th>
+                    <th className="px-6 py-3 text-left text-sm font-medium text-slate-300">Email</th>
+                    <th className="px-6 py-3 text-left text-sm font-medium text-slate-300">Rol</th>
+                    <th className="px-6 py-3 text-left text-sm font-medium text-slate-300">Estado</th>
+                    <th className="px-6 py-3 text-left text-sm font-medium text-slate-300">Acciones</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody className="divide-y divide-slate-700">
                   {users.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-6 py-10 text-center text-sm text-gray-500">
+                      <td colSpan={5} className="px-6 py-10 text-center text-sm text-slate-400">
                         No hay usuarios para mostrar.
                       </td>
                     </tr>
                   ) : (
                     users.map((user) => (
-                      <tr key={user.id} className="hover:bg-gray-50 transition">
-                        <td className="px-6 py-4 text-sm text-gray-900 font-medium">{user.nombre}</td>
-                        <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
+                      <tr key={user.id} className="transition hover:bg-slate-800/60">
+                        <td className="px-6 py-4 text-sm font-medium text-slate-100">{user.nombre}</td>
+                        <td className="px-6 py-4 text-sm text-slate-300">{user.email}</td>
                         <td className="px-6 py-4 text-sm">
                           <select
                             value={user.rol}
                             onChange={(e) => handleUpdateRole(user.id, e.target.value as UserRole)}
-                            className={`px-3 py-1 rounded-lg text-sm font-semibold border cursor-pointer ${getRoleColor(user.rol)}`}
+                            className={`cursor-pointer rounded-lg border px-3 py-1 text-sm font-semibold ${getRoleColor(user.rol)}`}
                           >
-                            <option className="bg-white text-gray-900" value={UserRole.MESERO}>Mesero</option>
-                            <option className="bg-white text-gray-900" value={UserRole.COCINA}>Cocina</option>
-                            <option className="bg-white text-gray-900" value={UserRole.CAJERO}>Cajero</option>
-                            <option className="bg-white text-gray-900" value={UserRole.ADMIN}>Admin</option>
+                            <option value={UserRole.MESERO}>Mesero</option>
+                            <option value={UserRole.COCINA}>Cocina</option>
+                            <option value={UserRole.CAJERO}>Cajero</option>
+                            <option value={UserRole.ADMIN}>Admin</option>
                           </select>
                         </td>
                         <td className="px-6 py-4 text-sm">
-                          <span className={`px-3 py-1 rounded-lg text-sm font-medium ${user.activo ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                          <span className={`rounded-lg px-3 py-1 text-sm font-medium ${user.activo ? 'bg-emerald-500/10 text-emerald-200' : 'bg-slate-700 text-slate-200'}`}>
                             {user.activo ? 'Activo' : 'Inactivo'}
                           </span>
                         </td>
@@ -280,14 +277,14 @@ export const UsuariosPage: React.FC = () => {
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => handleToggleActivo(user)}
-                              className={`p-2 rounded-lg transition ${user.activo ? 'hover:bg-gray-100 text-gray-600' : 'hover:bg-green-50 text-green-600'}`}
+                              className={`rounded-lg p-2 transition ${user.activo ? 'text-slate-300 hover:bg-slate-700' : 'text-emerald-200 hover:bg-emerald-500/10'}`}
                               title={user.activo ? 'Desactivar usuario' : 'Activar usuario'}
                             >
                               {user.activo ? <Lock size={16} /> : <Shield size={16} />}
                             </button>
                             <button
                               onClick={() => handleDelete(user.id)}
-                              className="p-2 hover:bg-red-50 text-red-600 rounded-lg transition"
+                              className="rounded-lg p-2 text-red-300 transition hover:bg-red-500/10"
                             >
                               <Trash2 size={16} />
                             </button>
