@@ -6,16 +6,16 @@
 
 @layer utilities {
   .glass {
-    @apply bg-slate-950/60 backdrop-blur-xl border border-slate-800/80 shadow-2xl shadow-slate-950/40;
+    @apply border border-slate-800/80 bg-slate-950/65 backdrop-blur-xl shadow-2xl shadow-slate-950/40;
   }
   .glass-dark {
-    @apply bg-slate-950/80 backdrop-blur-xl border border-slate-800/80 shadow-2xl shadow-slate-950/50;
+    @apply border border-slate-800/80 bg-slate-950/80 backdrop-blur-xl shadow-2xl shadow-slate-950/50;
   }
   .glass-card {
-    @apply bg-slate-900/70 backdrop-blur-md border border-slate-800/80 shadow-xl shadow-slate-950/30 hover:shadow-2xl hover:shadow-slate-950/40 hover:-translate-y-1 transition-all duration-300;
+    @apply border border-slate-800/80 bg-slate-900/70 backdrop-blur-md shadow-xl shadow-slate-950/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-slate-950/40;
   }
   .gradient-text {
-    @apply text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-cyan-300 to-sky-400;
+    @apply bg-gradient-to-r from-emerald-300 via-cyan-300 to-sky-400 bg-clip-text text-transparent;
   }
   .gradient-bg {
     @apply bg-[radial-gradient(circle_at_top_left,_rgba(34,197,94,0.18),_transparent_28%),radial-gradient(circle_at_top_right,_rgba(56,189,248,0.14),_transparent_26%),linear-gradient(180deg,_#08111f_0%,_#0b1525_52%,_#070d18_100%)];
@@ -36,29 +36,53 @@
     @apply min-h-screen text-slate-100;
   }
   .panel-surface {
-    @apply rounded-2xl border border-slate-800/80 bg-slate-900/75 backdrop-blur-md shadow-xl shadow-slate-950/25;
+    @apply rounded-3xl border border-slate-800/80 bg-slate-900/75 shadow-2xl shadow-slate-950/30 backdrop-blur-md;
   }
   .panel-muted {
-    @apply rounded-xl border border-slate-800/70 bg-slate-950/40;
+    @apply rounded-2xl border border-slate-800/70 bg-slate-950/40;
   }
   .field-input {
-    @apply w-full rounded-xl border border-slate-700 bg-slate-950/60 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/20;
+    @apply w-full rounded-2xl border border-slate-700 bg-slate-950/60 px-4 py-3 text-slate-100 placeholder:text-slate-500 transition duration-200 focus:border-emerald-400 focus:outline-none focus:ring-4 focus:ring-emerald-400/15;
   }
   .nav-link {
-    @apply flex items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 text-slate-300 transition hover:border-slate-800 hover:bg-slate-900/80 hover:text-white;
+    @apply flex items-center gap-3 rounded-2xl border border-transparent px-3 py-2.5 text-slate-300 transition duration-200 hover:border-slate-700 hover:bg-slate-900/80 hover:text-white;
   }
   .nav-link-active {
-    @apply border-emerald-500/30 bg-gradient-to-r from-emerald-500/20 via-cyan-500/10 to-transparent text-white shadow-lg shadow-emerald-950/20;
+    @apply border border-emerald-500/30 bg-gradient-to-r from-emerald-500/20 via-cyan-500/10 to-transparent text-white shadow-lg shadow-emerald-950/20;
   }
   .icon-button {
-    @apply rounded-xl border border-slate-800 bg-slate-900/70 p-2.5 text-slate-200 transition hover:border-slate-700 hover:bg-slate-800 hover:text-white;
+    @apply rounded-2xl border border-slate-700 bg-slate-900/80 p-2.5 text-slate-200 transition duration-200 hover:border-slate-600 hover:bg-slate-800 hover:text-white;
   }
   .danger-icon-button {
-    @apply rounded-xl border border-red-500/20 bg-red-500/10 p-2.5 text-red-300 transition hover:bg-red-500/20 hover:text-red-200;
+    @apply rounded-2xl border border-red-500/20 bg-red-500/10 p-2.5 text-red-300 transition duration-200 hover:bg-red-500/20 hover:text-red-200;
   }
   .primary-button {
-    @apply rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 px-4 py-2.5 font-semibold text-slate-950 shadow-lg shadow-emerald-950/25 transition hover:from-emerald-400 hover:to-cyan-400 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply rounded-2xl bg-gradient-to-r from-emerald-500 via-emerald-400 to-cyan-400 px-4 py-2.5 font-semibold text-slate-950 shadow-lg shadow-emerald-950/25 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60;
   }
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 15% 15%, rgba(16, 185, 129, 0.12), transparent 18%),
+    radial-gradient(circle at 85% 10%, rgba(59, 130, 246, 0.12), transparent 20%),
+    radial-gradient(circle at 50% 80%, rgba(34, 197, 94, 0.06), transparent 28%);
+  z-index: 0;
+}
+
+#root {
+  position: relative;
+  z-index: 1;
+}
+
+button,
+input,
+select,
+textarea {
+  transition: all 0.2s ease;
 }
 
 /* Custom Scrollbar */
@@ -71,7 +95,7 @@
 }
 ::-webkit-scrollbar-thumb {
   background: #334155;
-  border-radius: 4px;
+  border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #475569;
