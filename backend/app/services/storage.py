@@ -50,6 +50,7 @@ def _upload_to_r2(content: bytes, key: str, content_type: str | None) -> str:
         "Bucket": settings.R2_BUCKET_NAME,
         "Key": key,
         "Body": content,
+        "ACL": "public-read",
     }
     if content_type:
         put_kwargs["ContentType"] = content_type
