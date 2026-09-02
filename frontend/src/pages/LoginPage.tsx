@@ -117,7 +117,9 @@ export const LoginPage: React.FC = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     disabled={loading}
-                    className="field-input border-slate-700/80 bg-slate-900/80 pl-12 pr-4 text-slate-50 shadow-inner shadow-slate-950/50 focus:border-emerald-400/80 focus:shadow-[0_0_0_4px_rgba(16,185,129,0.12)] disabled:cursor-not-allowed disabled:opacity-60"
+                    className={`field-input border-slate-700/80 bg-slate-900/80 pr-4 text-slate-50 shadow-inner shadow-slate-950/50 focus:border-emerald-400/80 focus:shadow-[0_0_0_4px_rgba(16,185,129,0.12)] disabled:cursor-not-allowed disabled:opacity-60 ${
+                      showEmailIcon ? 'pl-12' : 'pl-4'
+                    }`}
                     placeholder="admin@restaurante.com"
                   />
                 </div>
@@ -140,7 +142,9 @@ export const LoginPage: React.FC = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     disabled={loading}
-                    className="field-input border-slate-700/80 bg-slate-900/80 pl-12 pr-4 text-slate-50 shadow-inner shadow-slate-950/50 focus:border-emerald-400/80 focus:shadow-[0_0_0_4px_rgba(16,185,129,0.12)] disabled:cursor-not-allowed disabled:opacity-60"
+                    className={`field-input border-slate-700/80 bg-slate-900/80 pr-4 text-slate-50 shadow-inner shadow-slate-950/50 focus:border-emerald-400/80 focus:shadow-[0_0_0_4px_rgba(16,185,129,0.12)] disabled:cursor-not-allowed disabled:opacity-60 ${
+                      showPasswordIcon ? 'pl-12' : 'pl-4'
+                    }`}
                     placeholder="Tu contrasena"
                   />
                 </div>
